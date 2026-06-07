@@ -4,6 +4,8 @@ Talk to **Wes**, an executive-communication coach modeled on [Wes Kao](https://n
 
 It's also a **template for turning any podcast persona into a character-agent**: the character is pure markdown, the runtime is thin, the gateways are pluggable.
 
+> **The north star** ([`VISION.md`](VISION.md)): not a paste-in bot — a *living coach* that learns your recurring weaknesses from everywhere you communicate (Slack → email → calls) and proves whether you're improving. The bot is surface #1.
+
 ```
 you ▸ here's a draft investor update, make it sharper: "Hey everyone, hope
       you're well! Wanted to send our monthly update. Mixed bag this month..."
