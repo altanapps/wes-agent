@@ -1,22 +1,26 @@
 import { runCli } from "./gateways/cli.js";
 import { runTelegram } from "./gateways/telegram.js";
+import { runLearn } from "./learn/run.js";
 
 /**
- * Entrypoint. Pick a gateway:
- *   npm run dev:cli        → talk in the terminal
- *   npm run dev:telegram   → run the Telegram bot
- * or: tsx src/index.ts <gateway>
+ * Entrypoint.
+ *   npm run dev:cli            → talk in the terminal
+ *   npm run dev:telegram       → run the Telegram bot
+ *   npm run learn -- <file>    → diagnose your recurring weaknesses from a corpus
+ * or: tsx src/index.ts <command>
  */
-const gateways: Record<string, () => Promise<void>> = {
+const name = process.argv[2] || process.env.GATEWAY || "cli";
+
+const commands: Record<string, () => Promise<void>> = {
   cli: runCli,
   telegram: runTelegram,
+  learn: () => runLearn(process.argv[3]),
 };
 
-const name = process.argv[2] || process.env.GATEWAY || "cli";
-const run = gateways[name];
+const run = commands[name];
 
 if (!run) {
-  console.error(`Unknown gateway "${name}". Available: ${Object.keys(gateways).join(", ")}`);
+  console.error(`Unknown command "${name}". Available: ${Object.keys(commands).join(", ")}`);
   process.exit(1);
 }
 

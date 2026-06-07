@@ -37,6 +37,9 @@ export function loadCharacter(name = config.character): {
   const personalization = loadPersonalization();
   if (personalization) parts.push(personalization);
 
+  const coachingProfile = loadCoachingProfile();
+  if (coachingProfile) parts.push(coachingProfile);
+
   parts.push(RUNTIME_NOTE);
 
   return { name, systemPrompt: parts.join("\n\n---\n\n") };
@@ -52,6 +55,28 @@ function loadPersonalization(): string | null {
   const body = readFileSync(config.profilePath, "utf8").trim();
   if (!body) return null;
   return `# About the person you're coaching\n\nUse this to tailor advice and to make rewrites sound like them, not generic.\n\n${body}`;
+}
+
+/**
+ * The coaching profile — your recurring weaknesses, learned from your real
+ * messages (see src/learn/). Injected so the coach targets the patterns you
+ * actually have and can flag when you repeat one. Explicitly NOT a voice clone.
+ */
+function loadCoachingProfile(): string | null {
+  const path = join(process.cwd(), ".coach", "profile.md");
+  if (!existsSync(path)) return null;
+  const body = readFileSync(path, "utf8").trim();
+  if (!body) return null;
+  return `# What you've learned about this person's communication
+
+This is a diagnosis of their RECURRING weaknesses, built from messages they actually sent across their channels. Use it to:
+- target coaching at the habits they actually have (don't re-teach what they already do well),
+- point out when they repeat a known pattern ("you buried the ask again — that's your #1 recurring miss"),
+- note progress when a tracked weakness improves.
+
+Do NOT use it to imitate their voice. Your job is to move them off these habits, not reinforce them.
+
+${body}`;
 }
 
 const RUNTIME_NOTE = `# Runtime

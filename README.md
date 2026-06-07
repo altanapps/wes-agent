@@ -36,9 +36,20 @@ npm run dev:cli
 npm run dev:telegram
 ```
 
+### Learn your recurring weaknesses (the coaching profile)
+
+A coach's real value isn't mimicking how you write — it's spotting what you *keep getting wrong* and tracking whether you improve. Feed `learn` a corpus of your sent messages (from any channel) and it diagnoses your recurring patterns against Wes's frameworks. The result is auto-loaded so Wes targets your actual habits ("you buried the ask again — your #1 miss").
+
+```bash
+npm run learn -- examples/sample-corpus.json   # → writes .coach/profile.md
+npm run dev:cli                                 # Wes now coaches your patterns
+```
+
+The corpus is a JSON array of `{text, channel, date, audience}` (or blank-line-separated text). Channel feeders — Slack → Email → Calls — produce it ([`docs/capture-channels.md`](docs/capture-channels.md)); the diagnosis is channel-agnostic. One draft can't show a pattern; a hundred can.
+
 ### Make rewrites sound like *you* (optional)
 
-Point `WES_PROFILE_PATH` at a gitignored markdown file describing your voice, your context, and who you write to. Wes injects it into her system prompt so rewrites match your cadence instead of a generic "good founder" voice.
+Separately, point `WES_PROFILE_PATH` at a gitignored markdown file describing your context and who you write to. This is a small *output* guardrail so rewrites read as a sharper you — not the thing worth learning (that's the coaching profile above).
 
 ```bash
 # .env
@@ -65,11 +76,12 @@ CHARACTER=<name> npm run dev:cli
 
 ## Roadmap
 
-Full roadmap in [`ROADMAP.md`](ROADMAP.md). North star: an **all-living communication coach** — always on, everywhere you write, coaching on the spot and learning your voice ([`docs/all-living-coach.md`](docs/all-living-coach.md)).
+Full roadmap in [`ROADMAP.md`](ROADMAP.md). North star: an **all-living communication coach** — always on, everywhere you communicate, learning your *recurring weaknesses* and coaching them on the spot ([`docs/all-living-coach.md`](docs/all-living-coach.md)).
 
 - [x] Character format + CLI + Telegram (reactive coach)
-- [ ] **Next:** "Coach this" global hotkey — select text anywhere → Wes critiques it
-- [ ] Private personalization (voice model) · more gateways ([`docs/gateways.md`](docs/gateways.md)) · agentic loop ([`docs/agentic-loop.md`](docs/agentic-loop.md))
+- [x] Coaching-profile engine — diagnose recurring weaknesses from a corpus of your messages (`npm run learn`)
+- [ ] **Next:** channel feeders — Slack → Email → Calls ([`docs/capture-channels.md`](docs/capture-channels.md)) to make the diagnosis continuous
+- [ ] More gateways ([`docs/gateways.md`](docs/gateways.md)) · agentic loop ([`docs/agentic-loop.md`](docs/agentic-loop.md))
 
 ## Disclaimer
 

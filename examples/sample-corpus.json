@@ -1,0 +1,38 @@
+[
+  {
+    "channel": "email",
+    "date": "2026-03-04",
+    "audience": "investor",
+    "text": "Hey, hope you're doing well! Wanted to give you a quick update on how things have been going this past month. It's been a busy one. We did a lot of work on the onboarding flow, ran into some auth issues that took longer than expected, talked to a bunch of customers, and also started thinking about pricing. Revenue is around the same as last month I think. Anyway, if you happen to know anyone who might be a good fit to invest, that would be amazing. Thanks so much for everything!"
+  },
+  {
+    "channel": "slack",
+    "date": "2026-03-12",
+    "audience": "cofounder",
+    "text": "so i was looking at the dashboard and i think maybe we might possibly want to consider changing the pricing? not sure though, could be wrong. lmk what you think whenever you get a chance no rush"
+  },
+  {
+    "channel": "email",
+    "date": "2026-03-20",
+    "audience": "potential customer",
+    "text": "Hi there! Thank you so much for taking the time to chat last week, it really meant a lot. So basically the way our product works is you sign up, then you connect your data source, then you configure the rules, and then it runs automatically. We also have a Slack integration and a few other things. Let me know if you'd maybe want to try it out, no pressure at all!"
+  },
+  {
+    "channel": "email",
+    "date": "2026-04-15",
+    "audience": "investor",
+    "text": "Hi — April update. Headline: we hit $24K MRR, up 30%, and signed two enterprise pilots. Quick context on each below. One ask: intros to seed investors who like vertical SaaS — I'll send a forwardable blurb Thursday. Hope you're well!"
+  },
+  {
+    "channel": "slack",
+    "date": "2026-04-22",
+    "audience": "cofounder",
+    "text": "i think we should move to usage-based pricing. rationale: our top 3 accounts are capped and would pay more; it aligns cost with value. risk is smaller accounts churn, but we can grandfather them. if you agree i'll draft the new tiers today"
+  },
+  {
+    "channel": "call",
+    "date": "2026-04-28",
+    "audience": "board",
+    "text": "Yeah so, um, I guess where we are is, we've been doing a lot of stuff, and there was the pricing thing, and the pilots, which went okay I think, and, yeah, we're kind of figuring out the next steps, but it's been good overall, lots going on, hard to summarize quickly but generally positive."
+  }
+]

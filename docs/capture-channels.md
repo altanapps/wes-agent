@@ -6,12 +6,14 @@ The main goal: **Wes learns your communication wherever it happens.** This doc i
 
 Every channel has two jobs, and they're built differently:
 
-- **LEARN (the data flywheel).** Ingest what you've already written → build a model of *your* voice (cadence, recurring tics, who you write to and how). Mostly **read APIs, post-hoc, low-risk.** This is the compounding asset — it's what makes Wes *your* coach instead of a generic one.
-- **COACH (the intervention).** Critique a message. *After-send* coaching is easy (you have the data; you flag it for next time). *Before-send* coaching is harder — APIs only see a message once it's posted, so real-time interception needs the desktop field (Accessibility) or a client plugin.
+- **LEARN (the data flywheel).** Ingest what you've already written → diagnose your **recurring weaknesses**: which frameworks you violate most, where, and whether you're improving over time. Mostly **read APIs, post-hoc, low-risk.** This is the compounding asset — a coach learns *what you keep getting wrong so it can target the fix*, **not** how to mimic your voice. (One draft can't reveal a pattern; a hundred can.)
+- **COACH (the intervention).** Critique a message. *After-send* coaching is easy (you have the data; you flag it for next time, and you point at the recurring pattern). *Before-send* coaching is harder — APIs only see a message once it's posted, so real-time interception needs the desktop field (Accessibility) or a client plugin.
 
-**Start with LEARN on every channel.** It's lower-risk, it's the flywheel, and after-send coaching ("that investor message buried the ask — here's tighter for next time") is genuinely useful on its own. Layer before-send interception on later.
+**Start with LEARN on every channel.** It's lower-risk, it's the flywheel, and after-send coaching ("you buried the ask again — that's your #1 recurring miss") is genuinely useful on its own. Layer before-send interception on later.
 
-Everything below feeds one **voice model** and passes through the on-device **privacy gate** from [`all-living-coach.md`](all-living-coach.md) (redact secrets/PII locally before anything reaches the cloud).
+Everything below feeds one **coaching profile** — a running diagnosis of your recurring weaknesses + trajectory (built by `src/learn/diagnostics.ts`) — and passes through the on-device **privacy gate** from [`all-living-coach.md`](all-living-coach.md) (redact secrets/PII locally before anything reaches the cloud).
+
+> Voice ≠ the asset. Rewrites should still *sound* like you (so you'll actually send them), but that's a small guardrail on output — not the thing worth learning. A coach's job is to move you off your bad habits, not reinforce them.
 
 ---
 
@@ -20,8 +22,8 @@ Everything below feeds one **voice model** and passes through the on-device **pr
 ### Learn
 A Slack app authorized with a **user token** (`xoxp-`) — it sees what *you* see and acts as you. Scopes: `channels:history`, `groups:history`, `im:history`, `mpim:history` (read message history across public/private channels, DMs, group DMs) + `users:read`.
 
-- **Backfill:** `conversations.list` → `conversations.history`, filter to messages where `user == your_id`. That's your entire Slack writing corpus → voice model.
-- **Stay current:** the **Events API** (`message` events) streams new messages in near-real-time. Capture your own the instant you send → after-send coaching + continuous voice learning.
+- **Backfill:** `conversations.list` → `conversations.history`, filter to messages where `user == your_id`. That's your entire Slack writing corpus → coaching profile.
+- **Stay current:** the **Events API** (`message` events) streams new messages in near-real-time. Capture your own the instant you send → after-send coaching + continuous diagnosis.
 
 ### Coach
 - **After-send (ship first):** Events API catches what you just sent; Wes DMs you a tighter version when one violates a framework. You can't unsend, but you learn for next time — and most Slack messages aren't irreversible.
@@ -36,7 +38,7 @@ A workspace admin may need to approve the app (your own workspace = you approve 
 
 ## 2. Email (priority 2 — the highest-stakes writing you do)
 
-Your sent email is the richest voice data you have: investor updates, cold outreach, fundraise notes — long-form, deliberate, consequential.
+Your sent email is the richest diagnostic data you have: investor updates, cold outreach, fundraise notes — long-form, deliberate, consequential.
 
 ### Learn
 **Gmail API**, read the **`SENT`** label:
@@ -68,14 +70,14 @@ On-device STT keeps audio local; transcript-only storage; per-call opt-in (and r
 
 ## Why this order
 
-Slack and email are where your *written* communication actually happens, and both have clean read-APIs that make the LEARN flywheel cheap and low-risk — so you get a personalized voice model fast. Calls add a whole new (spoken) modality and need audio capture + STT + consent handling, so they're the third iteration, not the first.
+Slack and email are where your *written* communication actually happens, and both have clean read-APIs that make the LEARN flywheel cheap and low-risk — so you get a personalized coaching profile fast. Calls add a whole new (spoken) modality and need audio capture + STT + consent handling, so they're the third iteration, not the first.
 
 ## Suggested build sequence
 
-1. **Slack LEARN** — user-token app, backfill + Events API → first cut of your voice model. After-send framework nudges.
+1. **Slack LEARN** — user-token app, backfill + Events API → first cut of your coaching profile. After-send framework nudges.
 2. **Email LEARN + BCC coach** — Gmail SENT backfill + Pub/Sub; ship "BCC Wes" for before-send.
-3. **Voice model, unified** — one store fed by Slack + email; injected into every rewrite (this is the thing that makes Wes *yours*).
+3. **Coaching profile, unified** — one store of your recurring weaknesses + trajectory, fed by every channel; the thing that makes coaching *yours*.
 4. **Before-send interception** — Accessibility (Slack desktop) + Gmail add-on / browser extension.
 5. **Calls** — Granola-style on-device capture → post-call verbal coaching.
 
-Each step passes through the on-device privacy gate. The voice model is the asset; everything else is plumbing to feed it.
+Each step passes through the on-device privacy gate. The coaching profile is the asset; everything else is plumbing to feed it.

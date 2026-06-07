@@ -13,3 +13,7 @@ personal/
 
 # Local conversation memory snapshots
 .memory/
+
+# Learned coaching profile (your private diagnosis) + any pulled corpus
+.coach/
+corpus*.json

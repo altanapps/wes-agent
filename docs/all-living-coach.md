@@ -1,6 +1,6 @@
 # The all-living communication coach (research + north star)
 
-The Telegram bot is one surface. The real vision: **Wes is always on, everywhere you communicate, coaching you on the spot** — before the email sends, before the Slack lands, before you say the thing in the meeting. She learns your voice and your relationships over time, so the coaching gets sharper and more personal the longer you use it.
+The Telegram bot is one surface. The real vision: **Wes is always on, everywhere you communicate, coaching you on the spot** — before the email sends, before the Slack lands, before you say the thing in the meeting. She learns *your recurring weaknesses* and your relationships over time, so the coaching gets sharper and more personal the longer you use it — and she can tell you whether you're actually improving.
 
 This doc is the researched path to get there, the honest tradeoffs, and the recommended first step. Sources at the bottom.
 
@@ -44,7 +44,7 @@ The naive version streams everything you type to the cloud. Don't build that. Pu
 
 - **The local gate is the trust spine.** A small on-device model (Llama/Qwen/Gemma via MLX or Ollama — now fast on Apple Silicon) decides *what's even worth coaching* and **redacts secrets/PII before anything leaves the machine**. Passwords, the 90% of typing that isn't an outgoing message, anything you didn't opt to share — never hits the cloud.
 - **The cloud coach (Opus 4.8) only sees what cleared the gate** — and ideally only when you ask ("coach this") or right before send. This keeps cost down *and* keeps the privacy surface small.
-- **Memory/voice model** is the compounding asset: your cadence, your recurring tics, your relationships (this investor likes brevity; this cofounder needs the why). Stored locally, injected per rewrite. This is what makes it *your* coach, not a generic one.
+- **The coaching profile** is the compounding asset: a running diagnosis of your *recurring weaknesses* (which frameworks you miss most, and whether you're improving) plus your relationships (this investor likes brevity; this cofounder needs the why). Stored locally, used to target coaching and track progress. This is what makes it *your* coach — it learns what you keep getting wrong, **not** how to mimic you. (Built: `src/learn/diagnostics.ts`.)
 
 ## Build vs. leverage
 
@@ -54,7 +54,7 @@ Don't build the capture layer from scratch — the category churns (Rewind and L
 - **Capture, web:** a Manifest-V3 browser extension (Grammarly's exact mechanism) — content script reads the focused field, shows an inline "Ask Wes" pill, sends only that field to the gate.
 - **Capture, async:** Telegram/CLI (✅ built) + email "BCC Wes" (an inbound-email webhook — Postmark/SES).
 - **Local model:** Ollama (now with an MLX backend) or MLX directly — small models are interactive on any M-series Mac.
-- **The coach + voice model:** this repo. The character files and `Wes.respond()` are already the engine.
+- **The coach + coaching profile:** this repo. The character files and `Wes.respond()` are already the engine.
 
 ## Phasing (crawl → walk → run)
 
@@ -74,7 +74,7 @@ Don't build the capture layer from scratch — the category churns (Rewind and L
 - **Opt-in per surface and per app.** You choose which apps/sites Wes watches. Default off.
 - **Redaction before egress.** The local gate strips secrets/PII before anything is sent to coach.
 - **Trigger-first by default.** Phases 1–2 are *you*-triggered ("coach this"), not silent capture. Ambient (Phase 3) is opt-in on top.
-- **Your data, your machine.** Voice model + memory stored locally; exportable; deletable. No selling the one thing that makes it valuable.
+- **Your data, your machine.** Coaching profile + memory stored locally; exportable; deletable. No selling the one thing that makes it valuable.
 
 ## Honest risks / tradeoffs
 
