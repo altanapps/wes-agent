@@ -14,11 +14,17 @@ export async function runTelegram(): Promise<void> {
 
   const wes = new Wes();
   const bot = new Bot(config.telegram.token);
-  const allow = new Set(config.telegram.allowedUserIds);
+  // Allow-list entries can be numeric user IDs OR @usernames (case-insensitive).
+  // Empty set = open to everyone.
+  const allow = new Set(config.telegram.allowedUserIds.map((s) => s.toLowerCase()));
 
   bot.on("message:text", async (ctx) => {
     const userId = ctx.from?.id ? String(ctx.from.id) : "";
-    if (allow.size > 0 && !allow.has(userId)) {
+    const username = ctx.from?.username ? ctx.from.username.toLowerCase() : "";
+    // Log who's messaging so you can capture IDs/handles for the allow-list.
+    console.log(`[msg] @${username || "?"} (id ${userId}) chat ${ctx.chat.id}`);
+
+    if (allow.size > 0 && !isAllowed(allow, userId, username)) {
       await ctx.reply("This bot is private.");
       return;
     }
@@ -48,6 +54,13 @@ export async function runTelegram(): Promise<void> {
 
   console.log(`${wes.name} is live on Telegram. Press Ctrl+C to stop.`);
   await bot.start();
+}
+
+/** Match an inbound user against the allow-list (numeric id or @username). */
+function isAllowed(allow: Set<string>, userId: string, username: string): boolean {
+  if (userId && allow.has(userId)) return true;
+  if (username && (allow.has(`@${username}`) || allow.has(username))) return true;
+  return false;
 }
 
 /** Split a long reply into Telegram-sized pieces, preferring paragraph breaks. */
