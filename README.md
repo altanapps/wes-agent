@@ -65,11 +65,11 @@ CHARACTER=<name> npm run dev:cli
 
 ## Roadmap
 
+Full roadmap in [`ROADMAP.md`](ROADMAP.md). North star: an **all-living communication coach** — always on, everywhere you write, coaching on the spot and learning your voice ([`docs/all-living-coach.md`](docs/all-living-coach.md)).
+
 - [x] Character format + CLI + Telegram (reactive coach)
-- [ ] Private personalization profile, polished
-- [ ] Durable memory (Redis/SQLite) + cross-session voice model
-- [ ] More gateways: email "BCC Wes", Slack app, browser extension ([`docs/gateways.md`](docs/gateways.md))
-- [ ] Agentic loop: watch drafts, close the loop, run meeting prep ([`docs/agentic-loop.md`](docs/agentic-loop.md))
+- [ ] **Next:** "Coach this" global hotkey — select text anywhere → Wes critiques it
+- [ ] Private personalization (voice model) · more gateways ([`docs/gateways.md`](docs/gateways.md)) · agentic loop ([`docs/agentic-loop.md`](docs/agentic-loop.md))
 
 ## Disclaimer
 
