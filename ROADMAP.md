@@ -1,27 +1,32 @@
 # Roadmap
 
-**North star:** an *all-living communication coach* — Wes, always on, everywhere you communicate, coaching you on the spot and learning your voice over time. The Telegram bot is surface #1. Full research + architecture: [`docs/all-living-coach.md`](docs/all-living-coach.md).
+**North star:** an *all-living communication coach* — Wes learns your communication **wherever it happens** and coaches you on the spot. The compounding asset is a **voice model** of you, fed by every channel. Channel priority: **Slack → Email → Calls.** Full architecture: [`docs/all-living-coach.md`](docs/all-living-coach.md). Concrete capture mechanics: [`docs/capture-channels.md`](docs/capture-channels.md).
 
-## Now
+## Done
 
 - [x] Character format (markdown) + runtime + CLI gateway
 - [x] Telegram gateway — live as `@wes_agent_bot` (running locally for now)
-- [ ] **Phase 1 — "Coach this" global hotkey (next, recommended).** Mac menubar app: select any text anywhere → hotkey → Wes critiques it in a popover. Ubiquitous, opt-in, zero always-on-capture trust cost. The 80/20 toward on-the-spot coaching.
 
-## Next
+## Main goal: learn your communication everywhere (in priority order)
 
-- [ ] Private personalization profile (`WES_PROFILE_PATH`), polished — make rewrites sound like *you*
+- [ ] **1 — Slack capture.** User-token Slack app: backfill your sent messages + Events API for new ones → first cut of your **voice model** + after-send framework nudges. (Before-send via Accessibility = later.)
+- [ ] **2 — Email capture.** Gmail API `SENT` backfill + `users.watch`/Pub/Sub → richest voice data. Ship **"BCC Wes"** for before-send coaching.
+- [ ] **3 — Calls (Granola-style).** On-device mic + system-audio capture (no bot) → transcript → post-call coaching of your *spoken* delivery.
+
+See [`docs/capture-channels.md`](docs/capture-channels.md) for the exact APIs, scopes, and the LEARN-vs-COACH split per channel.
+
+## Supporting (enables the above)
+
+- [ ] **Voice model** — one local store (cadence, tics, relationships), fed by every channel, injected into every rewrite. *This is the asset.*
+- [ ] On-device **privacy/triage gate** (small local LLM via MLX/Ollama): redacts secrets/PII before anything reaches the cloud; decides what's worth coaching
+- [ ] Private personalization profile (`WES_PROFILE_PATH`), polished
 - [ ] Allow-list the Telegram bot (`TELEGRAM_ALLOWED_USER_IDS`) so it's just you
-- [ ] Durable memory (Redis/SQLite) + a persisted **voice model** (your cadence, tics, relationships)
-- [ ] Email "BCC Wes" gateway (inbound-email webhook)
-- [ ] Browser extension — coach in any web field, Grammarly-style (Phase 2)
 
-## Later (the all-living layers)
+## Later layers
 
-- [ ] On-device **privacy/triage gate** (small local LLM via MLX/Ollama): decides what's worth coaching, redacts secrets/PII before anything reaches the cloud
-- [ ] Ambient capture — Screenpipe / Accessibility API → proactive flagging of drafts that violate a framework (Phase 3)
+- [ ] Before-send interception — Slack desktop (Accessibility API) + Gmail add-on / browser extension
 - [ ] Agentic loop — watch drafts, close the loop (did they reply? draft the nudge), auto-grow the swipe file ([`docs/agentic-loop.md`](docs/agentic-loop.md))
-- [ ] Voice coaching — spoken delivery in/after meetings (Phase 4)
+- [ ] "Coach this" global hotkey — select text anywhere → Wes critiques it (quick win, any-surface)
 
 ## Principles (for the always-on layers)
 
