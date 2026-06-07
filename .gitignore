@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.log
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Private personalization (your own profile/voice — keep out of the public repo)
+personal/
+*.private.md
+
+# Local conversation memory snapshots
+.memory/

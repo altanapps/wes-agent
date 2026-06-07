@@ -1,0 +1,27 @@
+{
+  "name": "wes-agent",
+  "version": "0.1.0",
+  "description": "Talk to Wes — an executive-communication coach character, modeled on Wes Kao, served over Telegram, CLI, and more. A template for podcast/persona character-agents.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:cli": "tsx src/index.ts cli",
+    "dev:telegram": "tsx src/index.ts telegram",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.102.0",
+    "dotenv": "^16.4.5",
+    "grammy": "^1.30.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
