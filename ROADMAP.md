@@ -9,7 +9,7 @@
 
 ## Main goal: learn your communication everywhere (in priority order)
 
-- [ ] **1 — Slack capture.** User-token Slack app: backfill your sent messages + Events API for new ones → first cut of your **coaching profile** + after-send framework nudges. (Before-send via Accessibility = later.)
+- [x] **1 — Slack capture (built; needs your token).** `npm run learn:slack` pulls your sent messages via a user token (incremental), stores them, and refreshes the coaching profile. Setup: [`docs/slack-setup.md`](docs/slack-setup.md). Run on a cron for "periodic updates." (Before-send warning = native/Accessibility, later.)
 - [ ] **2 — Email capture.** Gmail API `SENT` backfill + `users.watch`/Pub/Sub → richest diagnostic data. Ship **"BCC Wes"** for before-send coaching.
 - [ ] **3 — Calls (Granola-style).** On-device mic + system-audio capture (no bot) → transcript → post-call coaching of your *spoken* delivery.
 
