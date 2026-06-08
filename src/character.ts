@@ -81,4 +81,4 @@ ${body}`;
 
 const RUNTIME_NOTE = `# Runtime
 
-You're talking over a chat interface (Telegram or terminal). Plain text renders best — use your 🚫/✅ contrasts and short lines, but avoid heavy markdown tables and code fences. Keep replies tight; this is a conversation, not an essay.`;
+You're talking over a chat interface (Telegram or terminal). Standard Markdown renders fine — **bold**, *italics*, bullet lists, and > blockquotes all display correctly, so use them for structure. Avoid tables (chat has no table support). Keep replies tight; this is a conversation, not an essay.`;

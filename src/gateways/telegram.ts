@@ -1,8 +1,10 @@
-import { Bot } from "grammy";
+import { Bot, type Context } from "grammy";
+import telegramify from "telegramify-markdown";
 import { Wes } from "../wes.js";
 import { config } from "../config.js";
 
-const TELEGRAM_MAX = 4096;
+// Leave headroom: MarkdownV2 escaping adds backslashes, so chunk below 4096.
+const CHUNK_LIMIT = 3500;
 
 /** Telegram gateway — the primary "talk to Wes anywhere" front door. */
 export async function runTelegram(): Promise<void> {
@@ -42,8 +44,8 @@ export async function runTelegram(): Promise<void> {
     await ctx.replyWithChatAction("typing");
     try {
       const reply = await wes.respond(chatId, text);
-      for (const chunk of chunkText(reply)) {
-        await ctx.reply(chunk);
+      for (const chunk of chunkText(reply, CHUNK_LIMIT)) {
+        await sendRich(ctx, chunk);
       }
     } catch (err) {
       await ctx.reply(`Hit an error: ${(err as Error).message}`);
@@ -56,6 +58,21 @@ export async function runTelegram(): Promise<void> {
   await bot.start();
 }
 
+/**
+ * Send a chunk with Telegram formatting. Wes writes standard Markdown
+ * (**bold**, *italic*, > quote); Telegram uses MarkdownV2 with strict escaping.
+ * Convert, then send — and if anything fails, fall back to raw text so the
+ * message always lands (never an entity-parse error, never literal asterisks).
+ */
+async function sendRich(ctx: Context, text: string): Promise<void> {
+  try {
+    const md = telegramify(text, "escape");
+    await ctx.reply(md, { parse_mode: "MarkdownV2" });
+  } catch {
+    await ctx.reply(text);
+  }
+}
+
 /** Match an inbound user against the allow-list (numeric id or @username). */
 function isAllowed(allow: Set<string>, userId: string, username: string): boolean {
   if (userId && allow.has(userId)) return true;
@@ -64,7 +81,7 @@ function isAllowed(allow: Set<string>, userId: string, username: string): boolea
 }
 
 /** Split a long reply into Telegram-sized pieces, preferring paragraph breaks. */
-function chunkText(text: string, limit = TELEGRAM_MAX): string[] {
+function chunkText(text: string, limit = CHUNK_LIMIT): string[] {
   if (text.length <= limit) return [text];
   const chunks: string[] = [];
   let remaining = text;
