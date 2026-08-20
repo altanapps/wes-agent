@@ -43,11 +43,23 @@ dismissBtn.addEventListener("click", () => {
   void window.wes.nudgeDismiss();
 });
 
+let everRecorded = false;
+
 window.wes.onRecordingStatus((s) => {
   if (s.state === "recording") {
+    everRecorded = true;
     showRecording(s.startedAt);
+  } else if (s.state === "starting") {
+    subEl.textContent = "Starting…";
   } else if (s.state === "idle") {
-    // Recording finished (or failed) — the pill's job is done.
+    if (s.error && !everRecorded) {
+      // Start failed — say so in the pill instead of silently doing nothing.
+      subEl.textContent = `⚠️ ${s.error}`;
+      const btn = document.getElementById("record") as HTMLButtonElement | null;
+      if (btn) btn.disabled = false;
+      return;
+    }
+    // Recording finished — the pill's job is done.
     if (timer) clearInterval(timer);
     void window.wes.nudgeDismiss();
   }

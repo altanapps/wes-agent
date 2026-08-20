@@ -32,6 +32,13 @@ export function isInstalled(id: WhisperModelId): boolean {
   return existsSync(modelPath(id)) && statSync(modelPath(id)).size > 10_000_000;
 }
 
+/** The preferred model if installed, else the best installed one (larger =
+ *  better), else null. Recording with a smaller model beats not recording. */
+export function bestInstalledModel(preferred: WhisperModelId): WhisperModelId | null {
+  const order: WhisperModelId[] = [preferred, "small.en", "base.en", "tiny.en"];
+  return order.find(isInstalled) ?? null;
+}
+
 export function modelsState(): WhisperModelState[] {
   return (Object.keys(CATALOG) as WhisperModelId[]).map((id) => ({
     id,

@@ -10,7 +10,7 @@ import {
 import type { CaptureLane, RecordingStatus } from "../shared/ipc.js";
 import * as db from "./db.js";
 import { whisperManager } from "./whisper/manager.js";
-import { isInstalled, modelPath } from "./whisper/models.js";
+import { bestInstalledModel, modelPath } from "./whisper/models.js";
 import { buildDesktopConfig } from "./coach.js";
 import { getStoredWhisperModel } from "./settings.js";
 import { ingestCall } from "./profileManager.js";
@@ -77,9 +77,12 @@ class RecordingSession {
     if (this.state !== "idle") return this.status();
     this.lastError = null;
 
-    const whisperModel = getStoredWhisperModel();
-    if (!isInstalled(whisperModel)) {
-      this.lastError = `Whisper model "${whisperModel}" is not downloaded — Settings → Transcription.`;
+    // Prefer the configured model; fall back to any installed one — recording
+    // with a smaller model beats silently not recording.
+    const whisperModel = bestInstalledModel(getStoredWhisperModel());
+    if (!whisperModel) {
+      this.lastError = "No transcription model downloaded yet — open Wes → Settings → Transcription.";
+      this.push(); // every surface (pill included) must see the failure
       return this.status();
     }
 
