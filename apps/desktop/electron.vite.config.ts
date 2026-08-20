@@ -28,6 +28,8 @@ export default defineConfig({
           index: resolve(import.meta.dirname, "src/renderer/index.html"),
           // Hidden capture window for recording sessions.
           capture: resolve(import.meta.dirname, "src/renderer/capture.html"),
+          // Floating nudge pill ("Meeting detected — Record?").
+          nudge: resolve(import.meta.dirname, "src/renderer/nudge.html"),
         },
       },
     },

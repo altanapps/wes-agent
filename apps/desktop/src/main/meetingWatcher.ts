@@ -1,10 +1,11 @@
-import { app, Notification } from "electron";
+import { app } from "electron";
 import { execFile } from "node:child_process";
 import { appendFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { recordingSession } from "./recordingSession.js";
 import { getMeetingNudgeEnabled } from "./settings.js";
+import { showNudgePill } from "./nudgeWindow.js";
 
 const execFileP = promisify(execFile);
 
@@ -97,24 +98,13 @@ async function micInUse(): Promise<boolean> {
   }
 }
 
-export function nudge(title: string, body: string, recordTitle: string): void {
-  wlog(`NUDGE fired: "${title}" (record title: "${recordTitle}") — notification supported: ${Notification.isSupported()}`);
-  // Notifications from an ad-hoc-signed app can be silently muted, so the
-  // tray also flashes (via onNudgeCb) — two chances to be seen, zero auto-record.
+export function nudge(title: string, _body: string, recordTitle: string): void {
+  wlog(`NUDGE fired: "${title}" (record title: "${recordTitle}") — showing pill`);
+  // The pill is the popup (always-on-top, over fullscreen meetings, real
+  // Record button); the tray flash (via onNudgeCb) is the backup signal.
+  // Zero auto-record either way.
   onNudgeCb?.();
-  if (!Notification.isSupported()) return;
-  const n = new Notification({
-    title,
-    body,
-    actions: [{ type: "button", text: "Record" }],
-    silent: false,
-  });
-  const start = () => {
-    if (!recordingSession.isActive()) void recordingSession.start(recordTitle);
-  };
-  n.on("action", start);
-  n.on("click", start);
-  n.show();
+  showNudgePill(title, recordTitle);
 }
 
 async function poll(): Promise<void> {

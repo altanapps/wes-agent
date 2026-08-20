@@ -13,6 +13,7 @@ import { downloadModel, modelsState } from "./whisper/models.js";
 import { whisperManager } from "./whisper/manager.js";
 import { corpusCounts, onProfileEvent, readProfile, regenerateProfile } from "./profileManager.js";
 import { currentMeetingTitle, nudge, startMeetingWatcher } from "./meetingWatcher.js";
+import { closeNudgePill, setPillRecordingActive } from "./nudgeWindow.js";
 
 const isDev = !!process.env.ELECTRON_RENDERER_URL;
 
@@ -66,8 +67,10 @@ function createMainWindow(): BrowserWindow {
 }
 
 function sendToUI(channel: string, payload: unknown): void {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send(channel, payload);
+  // Broadcast: the main window AND auxiliary windows (the nudge pill shows
+  // live recording state) all listen on the same channels.
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed()) win.webContents.send(channel, payload);
   }
 }
 
@@ -129,11 +132,15 @@ function registerIpc(): void {
     return result;
   });
 
-  ipcMain.handle(IPC.recordingStart, async () => {
-    // Auto-title a manual start after the calendar meeting happening right now.
-    const title = await currentMeetingTitle().catch(() => null);
-    return recordingSession.start(title ?? undefined);
+  ipcMain.handle(IPC.recordingStart, async (_e, title?: string) => {
+    // The nudge pill passes the meeting title; a manual start looks one up
+    // from the calendar meeting happening right now.
+    const resolved =
+      (typeof title === "string" && title.trim()) ||
+      (await currentMeetingTitle().catch(() => null));
+    return recordingSession.start(resolved || undefined);
   });
+  ipcMain.handle(IPC.nudgeDismiss, () => closeNudgePill());
   ipcMain.handle(IPC.recordingStop, () => recordingSession.stop());
   ipcMain.handle(IPC.callsList, () => db.listCalls());
   ipcMain.handle(IPC.callGet, (_e, id: string) => db.getCall(String(id)));
@@ -160,6 +167,7 @@ void app.whenReady().then(() => {
   onProfileEvent((status, detail) => sendToUI(IPC.evProfileStatus, { status, detail }));
   recordingSession.wire(
     (status) => {
+      setPillRecordingActive(status.state === "recording" || status.state === "starting");
       sendToUI(IPC.evRecordingStatus, status);
       refreshTray();
     },

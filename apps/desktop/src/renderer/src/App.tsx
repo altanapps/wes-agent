@@ -341,8 +341,8 @@ function SettingsPane({
                 Send test nudge
               </button>
               <span className="status">
-                You should see a notification and the menubar flash "◎ Wes — meeting?". If
-                neither appears, allow Wes in System Settings → Notifications.
+                A floating pill appears top-right — its Record button starts a real recording.
+                The menubar also flashes "◎ Wes — meeting?".
               </span>
             </div>
           </div>

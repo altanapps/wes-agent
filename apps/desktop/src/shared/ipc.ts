@@ -126,6 +126,7 @@ export const IPC = {
   trendsGet: "trends:get",
   profileRefresh: "profile:refresh",
   nudgeTest: "nudge:test",
+  nudgeDismiss: "nudge:dismiss",
   // main → renderer push events
   evRecordingStatus: "ev:recording-status",
   evCallUpdated: "ev:call-updated",
@@ -146,8 +147,10 @@ export interface WesApi {
   reportCaptureMode(mode: CaptureMode | "fatal", message?: string): void;
   granolaImport(): Promise<{ added: number }>;
 
-  recordingStart(): Promise<RecordingStatus>;
+  recordingStart(title?: string): Promise<RecordingStatus>;
   recordingStop(): Promise<RecordingStatus>;
+  /** Nudge pill only: hide the pill (never stops a recording). */
+  nudgeDismiss(): Promise<void>;
   callsList(): Promise<CallSummary[]>;
   callGet(id: string): Promise<CallDetail | null>;
   callDelete(id: string): Promise<void>;

@@ -31,8 +31,9 @@ const api: WesApi = {
     ipcRenderer.send(IPC.captureMode, mode, message),
   granolaImport: () => ipcRenderer.invoke(IPC.granolaImport),
 
-  recordingStart: () => ipcRenderer.invoke(IPC.recordingStart),
+  recordingStart: (title?: string) => ipcRenderer.invoke(IPC.recordingStart, title),
   recordingStop: () => ipcRenderer.invoke(IPC.recordingStop),
+  nudgeDismiss: () => ipcRenderer.invoke(IPC.nudgeDismiss),
   callsList: () => ipcRenderer.invoke(IPC.callsList),
   callGet: (id: string) => ipcRenderer.invoke(IPC.callGet, id),
   callDelete: (id: string) => ipcRenderer.invoke(IPC.callDelete, id),
