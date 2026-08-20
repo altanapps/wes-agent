@@ -15,6 +15,10 @@ const SAMPLE_RATE = 16000;
 let active = false;
 let buffers: Record<CaptureLane, Buffer[]> = { mic: [], system: [] };
 
+export function isCaptureTestActive(): boolean {
+  return active;
+}
+
 export function beginCaptureTest(): void {
   buffers = { mic: [], system: [] };
   active = true;

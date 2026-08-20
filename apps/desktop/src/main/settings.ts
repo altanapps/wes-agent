@@ -1,7 +1,7 @@
 import { app, safeStorage } from "electron";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Effort, PublicSettings, SettingsPatch } from "../shared/ipc.js";
+import type { Effort, PublicSettings, SettingsPatch, WhisperModelId } from "../shared/ipc.js";
 
 /**
  * App settings at <userData>/settings.json. Non-secrets are plain JSON; the
@@ -12,6 +12,7 @@ interface StoredSettings {
   model: string;
   effort: Effort;
   character: string;
+  whisperModel: WhisperModelId;
   apiKeyEncrypted?: string;
   granolaKeyEncrypted?: string;
 }
@@ -20,6 +21,7 @@ const DEFAULTS: StoredSettings = {
   model: "claude-opus-4-8",
   effort: "high",
   character: "wes",
+  whisperModel: "small.en",
 };
 
 function settingsFile(): string {
@@ -54,6 +56,7 @@ export function getPublicSettings(): PublicSettings {
     model: s.model,
     effort: s.effort,
     character: s.character,
+    whisperModel: s.whisperModel,
     hasApiKey: Boolean(s.apiKeyEncrypted) || Boolean(process.env.ANTHROPIC_API_KEY),
     hasGranolaKey: Boolean(s.granolaKeyEncrypted) || Boolean(process.env.GRANOLA_API_KEY),
   };
@@ -63,6 +66,7 @@ export function applySettingsPatch(patch: SettingsPatch): PublicSettings {
   const s = { ...load() };
   if (patch.model !== undefined) s.model = patch.model;
   if (patch.effort !== undefined) s.effort = patch.effort;
+  if (patch.whisperModel !== undefined) s.whisperModel = patch.whisperModel;
   if (patch.apiKey !== undefined && patch.apiKey.trim()) {
     s.apiKeyEncrypted = encryptSecret(patch.apiKey.trim());
   }
@@ -104,4 +108,8 @@ export function getGranolaKey(): string {
 export function getStoredModelAndEffort(): { model: string; effort: Effort; character: string } {
   const s = load();
   return { model: s.model, effort: s.effort, character: s.character };
+}
+
+export function getStoredWhisperModel(): WhisperModelId {
+  return load().whisperModel;
 }

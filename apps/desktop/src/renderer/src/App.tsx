@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import type { PublicSettings } from "../../shared/ipc.js";
+import type { PublicSettings, WhisperModelState } from "../../shared/ipc.js";
 import { CaptureTest } from "./CaptureTest.js";
+import { CallsPane } from "./CallsPane.js";
 import { Logo } from "./Logo.js";
 
 type View = "chat" | "calls" | "settings";
@@ -136,22 +137,57 @@ function ChatPane({ hasApiKey }: { hasApiKey: boolean }) {
   );
 }
 
-function CallsPane() {
+function TranscriptionSection() {
+  const [models, setModels] = useState<WhisperModelState[]>([]);
+  const [error, setError] = useState("");
+
+  const refresh = () => void window.wes.modelsState().then(setModels);
+  useEffect(() => {
+    refresh();
+    const off = window.wes.onModelProgress(({ id, pct }) => {
+      setModels((ms) => ms.map((m) => (m.id === id ? { ...m, downloadingPct: pct } : m)));
+    });
+    return off;
+  }, []);
+
   return (
-    <div className="panel">
-      <div className="panel-scroll">
-        <div className="panel-inner">
-          <h1>Calls</h1>
-          <p className="sub">
-            Recorded calls will appear here with a transcript, hard speech metrics, and Wes's
-            review. Until then: verify capture works on this Mac, and import your existing
-            meetings from Granola in Settings.
-          </p>
-          <div className="card">
-            <CaptureTest />
-          </div>
-        </div>
+    <div className="card">
+      <div className="field">
+        <label>Whisper model</label>
+        <small>
+          Transcription runs entirely on this Mac. Bigger models are more accurate and slower;
+          Small is the sweet spot on Apple Silicon.
+        </small>
       </div>
+      {models.map((m) => (
+        <div className="row" key={m.id}>
+          <span style={{ minWidth: 200, fontSize: 13.5 }}>
+            {m.label} <span className="status">({m.sizeMb} MB)</span>
+          </span>
+          {m.installed ? (
+            <span className="status">Installed ✓</span>
+          ) : m.downloadingPct != null ? (
+            <span className="status">Downloading… {m.downloadingPct}%</span>
+          ) : (
+            <button
+              className="btn secondary"
+              onClick={() => {
+                setError("");
+                window.wes
+                  .modelsDownload(m.id)
+                  .then(refresh)
+                  .catch((err) => {
+                    setError((err as Error).message);
+                    refresh();
+                  });
+              }}
+            >
+              Download
+            </button>
+          )}
+        </div>
+      ))}
+      {error && <p className="status">⚠️ {error}</p>}
     </div>
   );
 }
@@ -272,6 +308,14 @@ function SettingsPane({
               </button>
               <span className="status">{importStatus}</span>
             </div>
+          </div>
+
+          <div className="section-label">Transcription</div>
+          <TranscriptionSection />
+
+          <div className="section-label">Capture</div>
+          <div className="card">
+            <CaptureTest />
           </div>
         </div>
       </div>

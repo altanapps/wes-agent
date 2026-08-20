@@ -48,7 +48,7 @@ export function CaptureTest() {
     const source = ctx.createMediaStreamSource(new MediaStream(stream.getAudioTracks()));
     const node = new AudioWorkletNode(ctx, "pcm-chunker");
     node.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
-      window.wes.captureChunk(lane, e.data);
+      window.wes.captureChunk(lane, e.data, 0);
     };
     source.connect(node);
     return { stream, ctx };

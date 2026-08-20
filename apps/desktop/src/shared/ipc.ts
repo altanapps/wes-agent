@@ -1,19 +1,21 @@
+import type { CallMetrics, CaptureMode, CoachingReport, TranscriptSegment } from "@wes/core";
+
 /**
  * The single source of truth for the main ⇄ renderer IPC surface.
  * Main registers handlers for `Invoke` channels; preload exposes them as
- * `window.wes`; renderer calls them typed. Push events (main → renderer)
- * will join here in M1 (recording:status, transcript:segment, …).
+ * `window.wes`; renderer calls them typed.
  */
 
 export type Effort = "low" | "medium" | "high" | "max";
 
-/** Settings safe to show the renderer. The API key itself never crosses the bridge. */
+/** Settings safe to show the renderer. Keys themselves never cross the bridge. */
 export interface PublicSettings {
   model: string;
   effort: Effort;
   character: string;
   hasApiKey: boolean;
   hasGranolaKey: boolean;
+  whisperModel: WhisperModelId;
 }
 
 /** What the renderer may write. Keys are write-only: stored encrypted, never read back. */
@@ -22,6 +24,7 @@ export interface SettingsPatch {
   effort?: Effort;
   apiKey?: string;
   granolaApiKey?: string;
+  whisperModel?: WhisperModelId;
 }
 
 /** Which capture lane a PCM chunk belongs to — diarization by source. */
@@ -32,6 +35,53 @@ export interface CaptureTestResult {
   lanes: Partial<Record<CaptureLane, { seconds: number; rms: number }>>;
 }
 
+/* ---- Calls / recording ---- */
+
+export type CallStatus =
+  | "recording"
+  | "transcribing"
+  | "reviewing"
+  | "reviewed"
+  | "review_failed";
+
+export interface CallSummary {
+  id: string;
+  startedAt: number;
+  durationMs: number | null;
+  status: CallStatus;
+  title: string;
+  captureMode: CaptureMode;
+  /** One-line hook for the list: Wes's summaryLine, or a metric while pending. */
+  headline: string | null;
+}
+
+export interface CallDetail extends CallSummary {
+  segments: TranscriptSegment[];
+  metrics: CallMetrics | null;
+  report: CoachingReport | null;
+  reviewError: string | null;
+}
+
+export interface RecordingStatus {
+  state: "idle" | "starting" | "recording" | "finishing";
+  callId: string | null;
+  startedAt: number | null;
+  captureMode: CaptureMode | null;
+  error: string | null;
+}
+
+/* ---- Whisper models ---- */
+
+export type WhisperModelId = "tiny.en" | "base.en" | "small.en";
+
+export interface WhisperModelState {
+  id: WhisperModelId;
+  label: string;
+  sizeMb: number;
+  installed: boolean;
+  downloadingPct: number | null;
+}
+
 export const IPC = {
   chatSend: "chat:send",
   settingsGet: "settings:get",
@@ -39,7 +89,20 @@ export const IPC = {
   captureBegin: "capture:begin",
   captureChunk: "capture:chunk",
   captureEnd: "capture:end",
+  /** Capture renderer → main: which lanes actually opened / fatal failure. */
+  captureMode: "capture:mode",
   granolaImport: "granola:import",
+  recordingStart: "recording:start",
+  recordingStop: "recording:stop",
+  callsList: "calls:list",
+  callGet: "calls:get",
+  callDelete: "calls:delete",
+  modelsState: "models:state",
+  modelsDownload: "models:download",
+  // main → renderer push events
+  evRecordingStatus: "ev:recording-status",
+  evCallUpdated: "ev:call-updated",
+  evModelProgress: "ev:model-progress",
 } as const;
 
 /** The API preload exposes on window.wes. */
@@ -47,12 +110,26 @@ export interface WesApi {
   chat(conversationId: string, text: string): Promise<string>;
   getSettings(): Promise<PublicSettings>;
   setSettings(patch: SettingsPatch): Promise<PublicSettings>;
-  /** Spike A / onboarding self-check: record both lanes to WAVs for inspection. */
+  /** Capture self-check (onboarding) — records both lanes to WAVs. */
   captureBegin(): Promise<void>;
-  captureChunk(lane: CaptureLane, pcm: ArrayBuffer): void;
+  captureChunk(lane: CaptureLane, pcm: ArrayBuffer, startMs: number): void;
   captureEnd(): Promise<CaptureTestResult>;
-  /** Pull your spoken turns from Granola meetings into the corpus + refresh the profile. */
+  /** Capture renderer only: report which mode the lanes opened in, or a fatal error. */
+  reportCaptureMode(mode: CaptureMode | "fatal", message?: string): void;
   granolaImport(): Promise<{ added: number }>;
+
+  recordingStart(): Promise<RecordingStatus>;
+  recordingStop(): Promise<RecordingStatus>;
+  callsList(): Promise<CallSummary[]>;
+  callGet(id: string): Promise<CallDetail | null>;
+  callDelete(id: string): Promise<void>;
+
+  modelsState(): Promise<WhisperModelState[]>;
+  modelsDownload(id: WhisperModelId): Promise<void>;
+
+  onRecordingStatus(cb: (s: RecordingStatus) => void): () => void;
+  onCallUpdated(cb: (id: string) => void): () => void;
+  onModelProgress(cb: (p: { id: WhisperModelId; pct: number }) => void): () => void;
 }
 
 declare global {

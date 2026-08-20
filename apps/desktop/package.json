@@ -14,10 +14,13 @@
   },
   "dependencies": {
     "@wes/core": "*",
+    "better-sqlite3": "^13.0.3",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "smart-whisper": "^0.8.1"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "electron": "^43.4.1",
