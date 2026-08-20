@@ -165,7 +165,12 @@ void app.whenReady().then(() => {
   registerIpc();
   createTray();
   createMainWindow();
-  startMeetingWatcher();
+  // Tray fallback for nudges: notifications from an ad-hoc-signed app can be
+  // muted, so the menubar flashes "◎ Wes — meeting?" for two minutes too.
+  startMeetingWatcher(() => {
+    tray?.setTitle("◎ Wes — meeting?");
+    setTimeout(() => refreshTray(), 2 * 60_000);
+  });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
