@@ -18,13 +18,15 @@ const execFileP = promisify(execFile);
  *
  * Consent stance: the nudge always asks — there is no silent auto-record.
  */
-const POLL_MS = 15_000;
-/** Calendar is read every other tick (helper spawn is heavier than pgrep). */
-const CALENDAR_EVERY_TICKS = 2;
+const POLL_MS = 5_000;
+/** Calendar every 6th tick (30s), Zoom every 3rd (15s) — audio every tick. */
+const CALENDAR_EVERY_TICKS = 6;
+const ZOOM_EVERY_TICKS = 3;
 /** Nudge fires when an event starts within this window (or started < 5 min ago). */
 const UPCOMING_MS = 2 * 60_000;
 const STARTED_AGO_MS = 5 * 60_000;
-/** In-call must hold for this many consecutive ticks (~30s) — filters Siri/dictation. */
+/** Ambiguous in-call signal must hold this many consecutive ticks (~10s).
+ *  The unambiguous one — mic AND output together — fires immediately. */
 const MIC_CONSECUTIVE = 2;
 /** Minimum gap between mic nudges — guards against device flapping, nothing more.
  *  The real rule is one nudge per continuous call session (reset when it ends). */
@@ -134,32 +136,35 @@ async function poll(): Promise<void> {
   }
 
   // 2) Zoom: the CptHost process exists only during an active meeting.
-  try {
-    await execFileP("/usr/bin/pgrep", ["-x", "CptHost"]);
-    if (now - zoomPromptedAt > 30 * 60_000) {
-      zoomPromptedAt = now;
-      nudge("You're in a Zoom meeting", "Record it with Wes? Audio stays on this Mac.", "Zoom call");
+  if (tick % ZOOM_EVERY_TICKS === 0) {
+    try {
+      await execFileP("/usr/bin/pgrep", ["-x", "CptHost"]);
+      if (now - zoomPromptedAt > 30 * 60_000) {
+        zoomPromptedAt = now;
+        nudge("You're in a Zoom meeting", "Record it with Wes? Audio stays on this Mac.", "Zoom call");
+      }
+      return; // Zoom covered; don't double-nudge via the mic path
+    } catch {
+      // pgrep exits non-zero when no process matches — the normal case.
     }
-    return; // Zoom covered; don't double-nudge via the mic path
-  } catch {
-    // pgrep exits non-zero when no process matches — the normal case.
   }
 
   // 3) In-call detection ("Meeting detected"): catches Google Meet in a
   //    browser, ad-hoc calls, anything without a process or calendar event.
-  //    In-call = mic busy, OR output busy with recent mic activity — a muted
-  //    Meet participant releases the mic, but keeps hearing the call.
+  //    Mic AND output together is the unambiguous call signature — nudge
+  //    immediately. Mic alone, or output with recent mic activity (a muted
+  //    Meet participant releases the mic but keeps hearing the call), must
+  //    hold for ~10s first.
   const audio = await audioState();
   if (audio.mic) lastMicActiveAt = now;
   const inCall = audio.mic || (audio.output && now - lastMicActiveAt < MIC_MEMORY_MS);
   if (inCall) {
     micBusyTicks += 1;
     if (micBusyTicks === 1) wlog(`in-call signal (mic: ${audio.mic}, output: ${audio.output})`);
-    // One nudge per continuous mic session; >= so a cooldown-blocked tick can
-    // still fire later in the same call instead of never.
-    if (micBusyTicks >= MIC_CONSECUTIVE && !micSessionPrompted) {
+    const definite = audio.mic && audio.output;
+    if ((definite || micBusyTicks >= MIC_CONSECUTIVE) && !micSessionPrompted) {
       if (now - micPromptedAt <= MIC_COOLDOWN_MS) {
-        wlog("mic sustained but within flap cooldown — will retry next tick");
+        wlog("in-call but within flap cooldown — will retry next tick");
       } else {
         micSessionPrompted = true;
         micPromptedAt = now;
