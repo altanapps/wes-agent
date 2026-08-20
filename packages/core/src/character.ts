@@ -83,6 +83,19 @@ Do NOT use it to imitate their voice. Your job is to move them off these habits,
 ${body}`;
 }
 
+/** Read specific markdown files from the active character's directory (e.g.
+ *  frameworks.md + speech-protocol.md for the call reviewer, which wants the
+ *  knowledge without the whole chat persona). Missing files are skipped. */
+export function readCharacterFiles(config: CoachConfig, filenames: string[]): string {
+  const charactersDir = config.charactersDir ?? BUILTIN_CHARACTERS_DIR;
+  const dir = join(charactersDir, config.character);
+  return filenames
+    .map((f) => join(dir, f))
+    .filter((p) => existsSync(p))
+    .map((p) => readFileSync(p, "utf8").trim())
+    .join("\n\n---\n\n");
+}
+
 const RUNTIME_NOTE = `# Runtime
 
 You're talking over a chat interface (Telegram or terminal). Standard Markdown renders fine — **bold**, *italics*, bullet lists, and > blockquotes all display correctly, so use them for structure. Avoid tables (chat has no table support). Keep replies tight; this is a conversation, not an essay.`;
