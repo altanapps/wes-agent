@@ -12,7 +12,7 @@ import * as db from "./db.js";
 import { downloadModel, modelsState } from "./whisper/models.js";
 import { whisperManager } from "./whisper/manager.js";
 import { corpusCounts, onProfileEvent, readProfile, regenerateProfile } from "./profileManager.js";
-import { currentMeetingTitle, startMeetingWatcher } from "./meetingWatcher.js";
+import { currentMeetingTitle, nudge, startMeetingWatcher } from "./meetingWatcher.js";
 
 const isDev = !!process.env.ELECTRON_RENDERER_URL;
 
@@ -150,6 +150,9 @@ function registerIpc(): void {
     corpusCounts: corpusCounts(),
   }));
   ipcMain.handle(IPC.profileRefresh, () => regenerateProfile());
+  ipcMain.handle(IPC.nudgeTest, () =>
+    nudge("Test nudge", "This is what a meeting nudge looks like. Clicking starts a recording.", "Test call"),
+  );
 }
 
 void app.whenReady().then(() => {

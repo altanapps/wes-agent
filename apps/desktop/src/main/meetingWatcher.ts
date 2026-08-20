@@ -1,6 +1,6 @@
 import { app, Notification } from "electron";
 import { execFile } from "node:child_process";
-import { existsSync } from "node:fs";
+import { appendFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { recordingSession } from "./recordingSession.js";
@@ -51,6 +51,19 @@ function helperPath(): string {
     : join(app.getAppPath(), "build", "wes-calendar-helper");
 }
 
+/** Diagnostic trail at <userData>/watcher.log — the packaged app has no
+ *  visible stdout, and "why didn't it nudge me?" needs receipts. */
+function wlog(msg: string): void {
+  try {
+    appendFileSync(
+      join(app.getPath("userData"), "watcher.log"),
+      `${new Date().toISOString()} ${msg}\n`,
+    );
+  } catch {
+    // logging must never break the watcher
+  }
+}
+
 async function readCalendar(): Promise<CalendarEvent[]> {
   const bin = helperPath();
   if (calendarDenied || !existsSync(bin)) return [];
@@ -81,7 +94,8 @@ async function micInUse(): Promise<boolean> {
   }
 }
 
-function nudge(title: string, body: string, recordTitle: string): void {
+export function nudge(title: string, body: string, recordTitle: string): void {
+  wlog(`NUDGE fired: "${title}" (record title: "${recordTitle}") — notification supported: ${Notification.isSupported()}`);
   // Notifications from an ad-hoc-signed app can be silently muted, so the
   // tray also flashes (via onNudgeCb) — two chances to be seen, zero auto-record.
   onNudgeCb?.();
@@ -139,6 +153,10 @@ async function poll(): Promise<void> {
   //    sustained use so Siri/dictation don't trigger it.
   if (await micInUse()) {
     micBusyTicks += 1;
+    if (micBusyTicks === 1) wlog("mic in use (tick 1)");
+    if (micBusyTicks === MIC_CONSECUTIVE && now - micPromptedAt <= MIC_REPROMPT_MS) {
+      wlog("mic sustained but within re-prompt throttle — skipping");
+    }
     if (micBusyTicks === MIC_CONSECUTIVE && now - micPromptedAt > MIC_REPROMPT_MS) {
       micPromptedAt = now;
       const title = (await currentMeetingTitle().catch(() => null)) ?? "Call";
@@ -169,6 +187,7 @@ export async function currentMeetingTitle(): Promise<string | null> {
 export function startMeetingWatcher(onNudge?: () => void): void {
   if (timer) return;
   onNudgeCb = onNudge ?? null;
+  wlog(`watcher started (packaged: ${app.isPackaged}, helper: ${existsSync(helperPath())})`);
   timer = setInterval(() => void poll(), POLL_MS);
   void poll();
 }

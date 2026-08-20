@@ -329,12 +329,22 @@ function SettingsPane({
               <span>
                 Nudge me when a meeting with a video link is starting
                 <small>
-                  Watches your Mac's calendar (Google/anything it syncs) and detects active
-                  Zoom meetings. Always asks — never records on its own. macOS will request
-                  Calendar access on first use.
+                  Watches your Mac's calendar (Google/anything it syncs), detects active Zoom
+                  meetings, and notices sustained mic use (browser calls like Google Meet).
+                  Always asks — never records on its own. macOS will request Calendar access
+                  on first use.
                 </small>
               </span>
             </label>
+            <div className="row">
+              <button className="btn secondary" onClick={() => void window.wes.nudgeTest()}>
+                Send test nudge
+              </button>
+              <span className="status">
+                You should see a notification and the menubar flash "◎ Wes — meeting?". If
+                neither appears, allow Wes in System Settings → Notifications.
+              </span>
+            </div>
           </div>
 
           <div className="section-label">Transcription</div>

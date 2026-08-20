@@ -125,6 +125,7 @@ export const IPC = {
   modelsDownload: "models:download",
   trendsGet: "trends:get",
   profileRefresh: "profile:refresh",
+  nudgeTest: "nudge:test",
   // main → renderer push events
   evRecordingStatus: "ev:recording-status",
   evCallUpdated: "ev:call-updated",
@@ -156,6 +157,8 @@ export interface WesApi {
 
   trendsGet(): Promise<TrendsData>;
   profileRefresh(): Promise<void>;
+  /** Fire the exact meeting-nudge notification path, for verifying visibility. */
+  nudgeTest(): Promise<void>;
 
   onRecordingStatus(cb: (s: RecordingStatus) => void): () => void;
   onCallUpdated(cb: (id: string) => void): () => void;

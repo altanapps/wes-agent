@@ -42,6 +42,7 @@ const api: WesApi = {
 
   trendsGet: () => ipcRenderer.invoke(IPC.trendsGet),
   profileRefresh: () => ipcRenderer.invoke(IPC.profileRefresh),
+  nudgeTest: () => ipcRenderer.invoke(IPC.nudgeTest),
 
   onRecordingStatus: (cb) => subscribe(IPC.evRecordingStatus, cb),
   onCallUpdated: (cb) => subscribe(IPC.evCallUpdated, cb),
