@@ -17,30 +17,36 @@ import Foundation
 // Spawned by Wes's main process; macOS attributes permission prompts to the
 // responsible (parent) app, so the user sees "Wes".
 
-if CommandLine.arguments.contains("mic") {
+func isRunningSomewhere(defaultDeviceSelector: AudioObjectPropertySelector) -> Bool {
     var addr = AudioObjectPropertyAddress(
-        mSelector: kAudioHardwarePropertyDefaultInputDevice,
+        mSelector: defaultDeviceSelector,
         mScope: kAudioObjectPropertyScopeGlobal,
         mElement: kAudioObjectPropertyElementMain
     )
     var deviceID = AudioDeviceID(0)
     var size = UInt32(MemoryLayout<AudioDeviceID>.size)
-    var inUse = false
-    if AudioObjectGetPropertyData(
+    guard AudioObjectGetPropertyData(
         AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &size, &deviceID
-    ) == noErr, deviceID != 0 {
-        var running: UInt32 = 0
-        var runningSize = UInt32(MemoryLayout<UInt32>.size)
-        var runningAddr = AudioObjectPropertyAddress(
-            mSelector: kAudioDevicePropertyDeviceIsRunningSomewhere,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        if AudioObjectGetPropertyData(deviceID, &runningAddr, 0, nil, &runningSize, &running) == noErr {
-            inUse = running != 0
-        }
-    }
-    print("{\"inUse\":\(inUse)}")
+    ) == noErr, deviceID != 0 else { return false }
+    var running: UInt32 = 0
+    var runningSize = UInt32(MemoryLayout<UInt32>.size)
+    var runningAddr = AudioObjectPropertyAddress(
+        mSelector: kAudioDevicePropertyDeviceIsRunningSomewhere,
+        mScope: kAudioObjectPropertyScopeGlobal,
+        mElement: kAudioObjectPropertyElementMain
+    )
+    guard AudioObjectGetPropertyData(deviceID, &runningAddr, 0, nil, &runningSize, &running) == noErr
+    else { return false }
+    return running != 0
+}
+
+// mic → {"inUse":bool,"outputInUse":bool}. Output matters because a muted
+// meeting participant releases the mic (Meet + AirPods do this), but the
+// call's audio keeps the OUTPUT device running the whole time.
+if CommandLine.arguments.contains("mic") {
+    let mic = isRunningSomewhere(defaultDeviceSelector: kAudioHardwarePropertyDefaultInputDevice)
+    let output = isRunningSomewhere(defaultDeviceSelector: kAudioHardwarePropertyDefaultOutputDevice)
+    print("{\"inUse\":\(mic),\"outputInUse\":\(output)}")
     exit(0)
 }
 

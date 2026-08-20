@@ -24,11 +24,14 @@ const CALENDAR_EVERY_TICKS = 2;
 /** Nudge fires when an event starts within this window (or started < 5 min ago). */
 const UPCOMING_MS = 2 * 60_000;
 const STARTED_AGO_MS = 5 * 60_000;
-/** Mic must be busy for this many consecutive ticks (~30s) — filters Siri/dictation. */
+/** In-call must hold for this many consecutive ticks (~30s) — filters Siri/dictation. */
 const MIC_CONSECUTIVE = 2;
 /** Minimum gap between mic nudges — guards against device flapping, nothing more.
- *  The real rule is one nudge per continuous mic session (reset when it ends). */
-const MIC_COOLDOWN_MS = 3 * 60_000;
+ *  The real rule is one nudge per continuous call session (reset when it ends). */
+const MIC_COOLDOWN_MS = 60_000;
+/** A muted participant's mic flaps off, but call audio keeps the output device
+ *  running. Recent mic activity + continuous output = still in the call. */
+const MIC_MEMORY_MS = 3 * 60_000;
 
 const MEETING_LINK = /meet\.google\.com|zoom\.us\/(j|my)\/|teams\.microsoft\.com|whereby\.com|around\.co/i;
 
@@ -47,6 +50,7 @@ let tick = 0;
 let micBusyTicks = 0;
 let micPromptedAt = 0;
 let micSessionPrompted = false;
+let lastMicActiveAt = 0;
 let onNudgeCb: (() => void) | null = null;
 
 function helperPath(): string {
@@ -84,17 +88,17 @@ async function readCalendar(): Promise<CalendarEvent[]> {
   }
 }
 
-/** Is the default input device in use by ANY app? This is how browser-based
- *  meetings (Google Meet in Chrome) are caught — no process to watch, but the
- *  mic lights up. */
-async function micInUse(): Promise<boolean> {
+/** Default input/output device activity. Browser meetings (Google Meet in
+ *  Chrome) have no process to watch, but the audio devices light up. */
+async function audioState(): Promise<{ mic: boolean; output: boolean }> {
   const bin = helperPath();
-  if (!existsSync(bin)) return false;
+  if (!existsSync(bin)) return { mic: false, output: false };
   try {
     const { stdout } = await execFileP(bin, ["mic"], { timeout: 5_000 });
-    return (JSON.parse(stdout.trim()) as { inUse: boolean }).inUse === true;
+    const parsed = JSON.parse(stdout.trim()) as { inUse: boolean; outputInUse?: boolean };
+    return { mic: parsed.inUse === true, output: parsed.outputInUse === true };
   } catch {
-    return false;
+    return { mic: false, output: false };
   }
 }
 
@@ -141,12 +145,16 @@ async function poll(): Promise<void> {
     // pgrep exits non-zero when no process matches — the normal case.
   }
 
-  // 3) Mic-in-use ("Meeting detected"): catches Google Meet in a browser,
-  //    ad-hoc calls, anything without a process or calendar event. Requires
-  //    sustained use so Siri/dictation don't trigger it.
-  if (await micInUse()) {
+  // 3) In-call detection ("Meeting detected"): catches Google Meet in a
+  //    browser, ad-hoc calls, anything without a process or calendar event.
+  //    In-call = mic busy, OR output busy with recent mic activity — a muted
+  //    Meet participant releases the mic, but keeps hearing the call.
+  const audio = await audioState();
+  if (audio.mic) lastMicActiveAt = now;
+  const inCall = audio.mic || (audio.output && now - lastMicActiveAt < MIC_MEMORY_MS);
+  if (inCall) {
     micBusyTicks += 1;
-    if (micBusyTicks === 1) wlog("mic in use (tick 1)");
+    if (micBusyTicks === 1) wlog(`in-call signal (mic: ${audio.mic}, output: ${audio.output})`);
     // One nudge per continuous mic session; >= so a cooldown-blocked tick can
     // still fire later in the same call instead of never.
     if (micBusyTicks >= MIC_CONSECUTIVE && !micSessionPrompted) {
@@ -164,7 +172,7 @@ async function poll(): Promise<void> {
       }
     }
   } else {
-    if (micBusyTicks >= MIC_CONSECUTIVE) wlog("mic idle — session reset");
+    if (micBusyTicks >= MIC_CONSECUTIVE) wlog("audio idle — call session reset");
     micBusyTicks = 0;
     micSessionPrompted = false;
   }
