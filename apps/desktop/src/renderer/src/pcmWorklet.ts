@@ -1,9 +1,14 @@
 /**
- * AudioWorklet: batch 128-frame render quanta into ~0.5 s Int16 PCM chunks
- * and post them to the node. The AudioContext runs at 16 kHz (the context
- * itself resamples from hardware rate), so no downsampling needed here.
- * Plain JS on purpose: worklets load as raw modules, outside the bundler.
+ * PCM chunker worklet, loaded from a Blob URL so it works identically on the
+ * dev server (http://) and in the packaged app (file://) — an absolute
+ * "/pcm-worklet.js" resolves to the filesystem root under file:// and fails
+ * with "Unable to load a worklet's module".
+ *
+ * The worklet batches 128-frame render quanta into ~0.5 s Int16 PCM chunks.
+ * The AudioContext runs at 16 kHz (context-level resampling), so no
+ * downsampling is needed here.
  */
+const WORKLET_SOURCE = `
 class PcmChunker extends AudioWorkletProcessor {
   constructor() {
     super();
@@ -38,3 +43,11 @@ class PcmChunker extends AudioWorkletProcessor {
 }
 
 registerProcessor("pcm-chunker", PcmChunker);
+`;
+
+let workletUrl: string | null = null;
+
+export async function loadPcmWorklet(ctx: AudioContext): Promise<void> {
+  workletUrl ??= URL.createObjectURL(new Blob([WORKLET_SOURCE], { type: "text/javascript" }));
+  await ctx.audioWorklet.addModule(workletUrl);
+}

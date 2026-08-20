@@ -1,4 +1,5 @@
 import type { CaptureLane } from "../../shared/ipc.js";
+import { loadPcmWorklet } from "./pcmWorklet.js";
 
 /**
  * Recording-session audio graph (runs in the hidden capture window).
@@ -34,7 +35,7 @@ async function openLane(lane: CaptureLane): Promise<void> {
   }
 
   const ctx = new AudioContext({ sampleRate: SAMPLE_RATE });
-  await ctx.audioWorklet.addModule("/pcm-worklet.js");
+  await loadPcmWorklet(ctx);
   const source = ctx.createMediaStreamSource(new MediaStream(stream.getAudioTracks()));
   const node = new AudioWorkletNode(ctx, "pcm-chunker");
 

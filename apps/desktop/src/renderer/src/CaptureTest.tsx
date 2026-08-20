@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import type { CaptureLane, CaptureTestResult } from "../../shared/ipc.js";
+import { loadPcmWorklet } from "./pcmWorklet.js";
 
 /**
  * Spike A: prove two-lane capture (mic = you, system loopback = them) works on
@@ -44,7 +45,7 @@ export function CaptureTest() {
 
     // 16 kHz context: Chromium resamples the source to whisper's native rate.
     const ctx = new AudioContext({ sampleRate: 16000 });
-    await ctx.audioWorklet.addModule("/pcm-worklet.js");
+    await loadPcmWorklet(ctx);
     const source = ctx.createMediaStreamSource(new MediaStream(stream.getAudioTracks()));
     const node = new AudioWorkletNode(ctx, "pcm-chunker");
     node.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
