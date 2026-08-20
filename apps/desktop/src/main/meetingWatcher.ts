@@ -25,7 +25,9 @@ const UPCOMING_MS = 2 * 60_000;
 const STARTED_AGO_MS = 5 * 60_000;
 /** Mic must be busy for this many consecutive ticks (~30s) — filters Siri/dictation. */
 const MIC_CONSECUTIVE = 2;
-const MIC_REPROMPT_MS = 30 * 60_000;
+/** Minimum gap between mic nudges — guards against device flapping, nothing more.
+ *  The real rule is one nudge per continuous mic session (reset when it ends). */
+const MIC_COOLDOWN_MS = 3 * 60_000;
 
 const MEETING_LINK = /meet\.google\.com|zoom\.us\/(j|my)\/|teams\.microsoft\.com|whereby\.com|around\.co/i;
 
@@ -43,6 +45,7 @@ let calendarDenied = false;
 let tick = 0;
 let micBusyTicks = 0;
 let micPromptedAt = 0;
+let micSessionPrompted = false;
 let onNudgeCb: (() => void) | null = null;
 
 function helperPath(): string {
@@ -154,20 +157,26 @@ async function poll(): Promise<void> {
   if (await micInUse()) {
     micBusyTicks += 1;
     if (micBusyTicks === 1) wlog("mic in use (tick 1)");
-    if (micBusyTicks === MIC_CONSECUTIVE && now - micPromptedAt <= MIC_REPROMPT_MS) {
-      wlog("mic sustained but within re-prompt throttle — skipping");
-    }
-    if (micBusyTicks === MIC_CONSECUTIVE && now - micPromptedAt > MIC_REPROMPT_MS) {
-      micPromptedAt = now;
-      const title = (await currentMeetingTitle().catch(() => null)) ?? "Call";
-      nudge(
-        "Sounds like you're in a meeting",
-        "Record it with Wes? Audio stays on this Mac.",
-        title,
-      );
+    // One nudge per continuous mic session; >= so a cooldown-blocked tick can
+    // still fire later in the same call instead of never.
+    if (micBusyTicks >= MIC_CONSECUTIVE && !micSessionPrompted) {
+      if (now - micPromptedAt <= MIC_COOLDOWN_MS) {
+        wlog("mic sustained but within flap cooldown — will retry next tick");
+      } else {
+        micSessionPrompted = true;
+        micPromptedAt = now;
+        const title = (await currentMeetingTitle().catch(() => null)) ?? "Call";
+        nudge(
+          "Sounds like you're in a meeting",
+          "Record it with Wes? Audio stays on this Mac.",
+          title,
+        );
+      }
     }
   } else {
+    if (micBusyTicks >= MIC_CONSECUTIVE) wlog("mic idle — session reset");
     micBusyTicks = 0;
+    micSessionPrompted = false;
   }
 }
 
