@@ -1,10 +1,12 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { config } from "./config.js";
+import type { CoachConfig } from "./config.js";
+import { coachPaths } from "./storage/paths.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CHARACTERS_DIR = join(__dirname, "..", "characters");
+// packages/core/src → packages/core/characters (shipped with the package).
+const BUILTIN_CHARACTERS_DIR = join(__dirname, "..", "characters");
 
 /**
  * Assemble a character's system prompt from its directory.
@@ -12,15 +14,17 @@ const CHARACTERS_DIR = join(__dirname, "..", "characters");
  * This is the only thing that defines who the agent is — swap the directory
  * to swap the character. Fully SDK-agnostic.
  */
-export function loadCharacter(name = config.character): {
+export function loadCharacter(config: CoachConfig): {
   name: string;
   systemPrompt: string;
 } {
-  const dir = join(CHARACTERS_DIR, name);
+  const charactersDir = config.charactersDir ?? BUILTIN_CHARACTERS_DIR;
+  const name = config.character;
+  const dir = join(charactersDir, name);
   if (!existsSync(dir)) {
     throw new Error(
       `Character "${name}" not found at ${dir}. Available: ${readdirSync(
-        CHARACTERS_DIR,
+        charactersDir,
       ).join(", ")}`,
     );
   }
@@ -34,10 +38,10 @@ export function loadCharacter(name = config.character): {
     .filter((f) => f.toLowerCase() !== "readme.md")
     .map((f) => readFileSync(join(dir, f), "utf8").trim());
 
-  const personalization = loadPersonalization();
+  const personalization = loadPersonalization(config);
   if (personalization) parts.push(personalization);
 
-  const coachingProfile = loadCoachingProfile();
+  const coachingProfile = loadCoachingProfile(config);
   if (coachingProfile) parts.push(coachingProfile);
 
   parts.push(RUNTIME_NOTE);
@@ -50,7 +54,7 @@ export function loadCharacter(name = config.character): {
  * describing the user (voice, context, who they write to) so rewrites sound
  * like them. Keeps the public repo free of anyone's private profile.
  */
-function loadPersonalization(): string | null {
+function loadPersonalization(config: CoachConfig): string | null {
   if (!config.profilePath || !existsSync(config.profilePath)) return null;
   const body = readFileSync(config.profilePath, "utf8").trim();
   if (!body) return null;
@@ -62,8 +66,8 @@ function loadPersonalization(): string | null {
  * messages (see src/learn/). Injected so the coach targets the patterns you
  * actually have and can flag when you repeat one. Explicitly NOT a voice clone.
  */
-function loadCoachingProfile(): string | null {
-  const path = join(process.cwd(), ".coach", "profile.md");
+function loadCoachingProfile(config: CoachConfig): string | null {
+  const path = coachPaths(config.dataDir).profileFile;
   if (!existsSync(path)) return null;
   const body = readFileSync(path, "utf8").trim();
   if (!body) return null;

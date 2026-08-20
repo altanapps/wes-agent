@@ -1,13 +1,20 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
-type Turn = Anthropic.MessageParam;
+export type Turn = Anthropic.MessageParam;
 
 /**
- * Per-conversation history, keyed by an opaque id (Telegram chat id, CLI session,
- * etc). In-memory only — resets on restart. For durable memory, see
- * docs/architecture.md (swap this for a KV store or the Claude memory tool).
+ * Per-conversation history, keyed by an opaque id (Telegram chat id, CLI
+ * session, desktop conversation…). An interface so hosts choose durability:
+ * CLI uses the in-memory store, the desktop app persists to SQLite.
  */
-export class ConversationStore {
+export interface ConversationStore {
+  get(id: string): Turn[];
+  append(id: string, role: "user" | "assistant", content: string): Turn[];
+  reset(id: string): void;
+}
+
+/** In-memory only — resets on restart. */
+export class InMemoryConversationStore implements ConversationStore {
   private readonly turns = new Map<string, Turn[]>();
   constructor(private readonly maxTurns = 40) {}
 

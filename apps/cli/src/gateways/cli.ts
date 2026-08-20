@@ -1,9 +1,9 @@
 import readline from "node:readline";
-import { Wes } from "../wes.js";
+import { Wes, type CoachConfig } from "@wes/core";
 
 /** Terminal gateway — talk to the character without any external service. */
-export async function runCli(): Promise<void> {
-  const wes = new Wes();
+export async function runCli(config: CoachConfig): Promise<void> {
+  const wes = new Wes(config);
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,

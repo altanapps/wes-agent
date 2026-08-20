@@ -1,23 +1,24 @@
 import { mkdirSync, writeFileSync } from "node:fs";
-import { config } from "../config.js";
+import type { CoachConfig } from "../config.js";
+import { coachPaths } from "../storage/paths.js";
 import { slackSource } from "../sources/slack.js";
 import { appendMessages, loadCorpus, readCursor, writeCursor } from "./store.js";
 import { buildCoachingProfile } from "./diagnostics.js";
-import { PROFILE_DIR, PROFILE_PATH } from "./run.js";
 
 /**
- * `npm run learn:slack`
+ * The incremental Slack LEARN job (CLI: `npm run learn:slack`).
  * Pull your sent Slack messages since the last run, add them to the corpus,
- * regenerate the coaching profile. Run it on a schedule (cron / the /loop
- * skill) to get the "record everything I send + periodically update me" loop.
+ * regenerate the coaching profile. Run it on a schedule (cron / the desktop
+ * app's scheduler) to get the "record everything I send + periodically update
+ * me" loop. Throws when Slack isn't configured — the host reports and exits.
  */
-export async function runSlackIngest(): Promise<void> {
+export async function runSlackIngest(config: CoachConfig): Promise<void> {
   if (!config.slack.userToken) {
-    console.error("SLACK_USER_TOKEN not set. See docs/slack-setup.md.");
-    process.exit(1);
+    throw new Error("SLACK_USER_TOKEN not set. See docs/slack-setup.md.");
   }
+  const paths = coachPaths(config.dataDir);
 
-  const cursor = readCursor("slack");
+  const cursor = readCursor(paths, "slack");
   console.log(cursor ? `Pulling Slack messages since ${cursor}…` : "First run — pulling recent Slack history…");
 
   const messages = await slackSource({
@@ -25,7 +26,7 @@ export async function runSlackIngest(): Promise<void> {
     sinceTs: cursor,
   }).fetch();
 
-  const added = appendMessages(messages);
+  const added = appendMessages(paths, messages);
   console.log(`Captured ${messages.length} of your messages, ${added} new.`);
 
   // Advance the cursor to the newest message ts we saw (Slack ts == epoch seconds).
@@ -34,20 +35,20 @@ export async function runSlackIngest(): Promise<void> {
     .filter(Boolean)
     .sort()
     .at(-1);
-  if (newest) writeCursor("slack", `${newest}.000000`);
+  if (newest) writeCursor(paths, "slack", `${newest}.000000`);
 
-  const corpus = loadCorpus();
+  const corpus = loadCorpus(paths);
   if (corpus.length === 0) {
     console.log("No messages captured yet — nothing to diagnose.");
     return;
   }
 
   console.log(`Diagnosing across ${corpus.length} stored messages…`);
-  const profile = await buildCoachingProfile(corpus);
+  const profile = await buildCoachingProfile(config, corpus);
 
-  mkdirSync(PROFILE_DIR, { recursive: true });
-  writeFileSync(PROFILE_PATH, profile + "\n", "utf8");
+  mkdirSync(paths.dataDir, { recursive: true });
+  writeFileSync(paths.profileFile, profile + "\n", "utf8");
 
   console.log(`\n${profile}\n`);
-  console.log(`✓ Updated ${PROFILE_PATH} — the coach now reflects your latest Slack patterns.`);
+  console.log(`✓ Updated ${paths.profileFile} — the coach now reflects your latest Slack patterns.`);
 }

@@ -1,20 +1,19 @@
 import { Bot, type Context } from "grammy";
 import telegramify from "telegramify-markdown";
-import { Wes } from "../wes.js";
-import { config } from "../config.js";
+import { Wes, type CoachConfig } from "@wes/core";
 
 // Leave headroom: MarkdownV2 escaping adds backslashes, so chunk below 4096.
 const CHUNK_LIMIT = 3500;
 
 /** Telegram gateway — the primary "talk to Wes anywhere" front door. */
-export async function runTelegram(): Promise<void> {
+export async function runTelegram(config: CoachConfig): Promise<void> {
   if (!config.telegram.token) {
     throw new Error(
       "TELEGRAM_BOT_TOKEN is not set. Create a bot with @BotFather and add the token to .env.",
     );
   }
 
-  const wes = new Wes();
+  const wes = new Wes(config);
   const bot = new Bot(config.telegram.token);
   // Allow-list entries can be numeric user IDs OR @usernames (case-insensitive).
   // Empty set = open to everyone.

@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { config, requireAnthropicKey } from "../config.js";
+import { type CoachConfig, requireAnthropicKey } from "../config.js";
 import type { Message } from "../sources/types.js";
 
 /**
@@ -44,8 +44,11 @@ function render(messages: Message[]): string {
     .join("\n\n");
 }
 
-export async function buildCoachingProfile(messages: Message[]): Promise<string> {
-  requireAnthropicKey();
+export async function buildCoachingProfile(
+  config: CoachConfig,
+  messages: Message[],
+): Promise<string> {
+  requireAnthropicKey(config);
   if (messages.length === 0) throw new Error("Empty corpus — nothing to diagnose.");
 
   const client = new Anthropic({ apiKey: config.anthropicApiKey });

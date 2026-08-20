@@ -1,30 +1,32 @@
 {
   "name": "wes-agent",
   "version": "0.1.0",
-  "description": "Talk to Wes — an executive-communication coach character, modeled on Wes Kao, served over Telegram, CLI, and more. A template for podcast/persona character-agents.",
+  "description": "Wes — an executive-communication coach that learns your recurring weaknesses from what you actually write and say. Desktop app (Granola-style call coaching) + CLI/Telegram gateways.",
   "type": "module",
   "license": "MIT",
+  "private": true,
   "engines": {
     "node": ">=20"
   },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "dev:cli": "tsx src/index.ts cli",
-    "dev:telegram": "tsx src/index.ts telegram",
-    "learn": "tsx src/index.ts learn",
-    "learn:slack": "tsx src/index.ts slack",
-    "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.102.0",
-    "@slack/web-api": "^7.16.0",
-    "dotenv": "^16.4.5",
-    "grammy": "^1.30.0",
-    "telegramify-markdown": "^1.3.3"
+    "dev:cli": "tsx apps/cli/src/index.ts cli",
+    "dev:telegram": "tsx apps/cli/src/index.ts telegram",
+    "learn": "tsx apps/cli/src/index.ts learn",
+    "learn:slack": "tsx apps/cli/src/index.ts slack",
+    "dev:desktop": "npm run dev -w @wes/desktop",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run typecheck",
+    "start": "tsx apps/cli/src/index.ts cli",
+    "learn:granola": "tsx apps/cli/src/index.ts granola",
+    "learn:import": "tsx apps/cli/src/index.ts import",
+    "learn:refresh": "tsx apps/cli/src/index.ts refresh"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "sharp": "^0.35.3",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
   }

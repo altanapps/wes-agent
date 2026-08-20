@@ -1,12 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { config, requireAnthropicKey } from "./config.js";
+import { type CoachConfig, requireAnthropicKey } from "./config.js";
 import { loadCharacter } from "./character.js";
-import { ConversationStore } from "./memory.js";
+import { type ConversationStore, InMemoryConversationStore } from "./memory.js";
 
 /**
  * The coach. Wraps the Anthropic Messages API with a character system prompt
- * and per-conversation memory. Gateway-agnostic: Telegram, CLI, HTTP all call
- * `respond()`.
+ * and per-conversation memory. Gateway-agnostic: Telegram, CLI, desktop all
+ * call `respond()`.
  *
  * Built on the documented Messages API (@anthropic-ai/sdk). The character layer
  * is deliberately SDK-agnostic, so the agentic-loop phase (see docs/agentic-loop.md)
@@ -17,12 +17,14 @@ export class Wes {
   private readonly client: Anthropic;
   private readonly systemPrompt: string;
   readonly name: string;
-  private readonly store = new ConversationStore();
 
-  constructor() {
-    requireAnthropicKey();
+  constructor(
+    private readonly config: CoachConfig,
+    private readonly store: ConversationStore = new InMemoryConversationStore(),
+  ) {
+    requireAnthropicKey(config);
     this.client = new Anthropic({ apiKey: config.anthropicApiKey });
-    const character = loadCharacter();
+    const character = loadCharacter(config);
     this.name = character.name;
     this.systemPrompt = character.systemPrompt;
   }
@@ -37,11 +39,11 @@ export class Wes {
     const messages = this.store.append(conversationId, "user", userMessage);
 
     const response = await this.client.messages.create({
-      model: config.model,
+      model: this.config.model,
       max_tokens: 4096,
       system: this.systemPrompt,
       thinking: { type: "adaptive" },
-      output_config: { effort: config.effort },
+      output_config: { effort: this.config.effort },
       messages,
     });
 
