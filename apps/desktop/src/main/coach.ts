@@ -1,6 +1,7 @@
 import { app } from "electron";
-import { createConfig, Wes, type CoachConfig } from "@wes/core";
+import { createConfig, Wes, type CoachConfig, type ConversationStore } from "@wes/core";
 import { getApiKey, getGranolaKey, getStoredModelAndEffort } from "./settings.js";
+import { SqliteConversationStore } from "./conversationStore.js";
 
 /**
  * The Wes instance for the desktop host. Data (corpus, profile, later the
@@ -21,8 +22,14 @@ export function buildDesktopConfig(): CoachConfig {
   });
 }
 
+let store: ConversationStore | null = null;
+
 export function getWes(): Wes {
-  if (!instance) instance = new Wes(buildDesktopConfig());
+  if (!instance) {
+    // Durable chat memory: conversations survive restarts (unlike CLI's Map).
+    store ??= new SqliteConversationStore();
+    instance = new Wes(buildDesktopConfig(), store);
+  }
   return instance;
 }
 

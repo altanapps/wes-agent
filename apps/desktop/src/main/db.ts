@@ -155,6 +155,26 @@ export function getCall(id: string): CallDetail | null {
   };
 }
 
+export function getTrendSeries(): import("../shared/ipc.js").TrendPoint[] {
+  const rows = conn()
+    .prepare(
+      `${SELECT_CALLS} WHERE r.metrics_json IS NOT NULL ORDER BY c.started_at ASC`,
+    )
+    .all() as CallRow[];
+  return rows.map((row) => {
+    const m = row.metrics_json ? (JSON.parse(row.metrics_json) as CallMetrics) : null;
+    const r = row.report_json ? (JSON.parse(row.report_json) as CoachingReport) : null;
+    return {
+      callId: row.id,
+      startedAt: row.started_at,
+      wpm: m?.pace.wpmOverall ?? null,
+      fillersPer100: m?.fillers.per100Words ?? null,
+      talkRatio: m?.talk.ratioMe ?? null,
+      rubricTotal: r?.scores.total ?? null,
+    };
+  });
+}
+
 export function deleteCall(id: string): void {
   const c = conn();
   c.prepare("DELETE FROM transcript_segments WHERE call_id = ?").run(id);

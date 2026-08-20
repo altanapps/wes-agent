@@ -4,6 +4,7 @@ import { coachPaths } from "../storage/paths.js";
 import { slackSource } from "../sources/slack.js";
 import { appendMessages, loadCorpus, readCursor, writeCursor } from "./store.js";
 import { buildCoachingProfile } from "./diagnostics.js";
+import { windowCorpus } from "./flywheel.js";
 
 /**
  * The incremental Slack LEARN job (CLI: `npm run learn:slack`).
@@ -44,7 +45,7 @@ export async function runSlackIngest(config: CoachConfig): Promise<void> {
   }
 
   console.log(`Diagnosing across ${corpus.length} stored messages…`);
-  const profile = await buildCoachingProfile(config, corpus);
+  const profile = await buildCoachingProfile(config, windowCorpus(corpus));
 
   mkdirSync(paths.dataDir, { recursive: true });
   writeFileSync(paths.profileFile, profile + "\n", "utf8");

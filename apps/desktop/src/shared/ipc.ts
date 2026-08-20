@@ -74,6 +74,28 @@ export interface RecordingStatus {
 
 export type WhisperModelId = "tiny.en" | "base.en" | "small.en";
 
+/* ---- Trends / flywheel ---- */
+
+export interface TrendPoint {
+  callId: string;
+  startedAt: number;
+  wpm: number | null;
+  fillersPer100: number | null;
+  talkRatio: number | null;
+  rubricTotal: number | null;
+}
+
+export interface TrendsData {
+  series: TrendPoint[];
+  profile: string | null;
+  corpusCounts: Record<string, number>;
+}
+
+export interface ProfileStatus {
+  status: "regenerating" | "updated" | "failed";
+  detail?: string;
+}
+
 export interface WhisperModelState {
   id: WhisperModelId;
   label: string;
@@ -99,10 +121,13 @@ export const IPC = {
   callDelete: "calls:delete",
   modelsState: "models:state",
   modelsDownload: "models:download",
+  trendsGet: "trends:get",
+  profileRefresh: "profile:refresh",
   // main → renderer push events
   evRecordingStatus: "ev:recording-status",
   evCallUpdated: "ev:call-updated",
   evModelProgress: "ev:model-progress",
+  evProfileStatus: "ev:profile-status",
 } as const;
 
 /** The API preload exposes on window.wes. */
@@ -127,9 +152,13 @@ export interface WesApi {
   modelsState(): Promise<WhisperModelState[]>;
   modelsDownload(id: WhisperModelId): Promise<void>;
 
+  trendsGet(): Promise<TrendsData>;
+  profileRefresh(): Promise<void>;
+
   onRecordingStatus(cb: (s: RecordingStatus) => void): () => void;
   onCallUpdated(cb: (id: string) => void): () => void;
   onModelProgress(cb: (p: { id: WhisperModelId; pct: number }) => void): () => void;
+  onProfileStatus(cb: (s: ProfileStatus) => void): () => void;
 }
 
 declare global {

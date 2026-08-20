@@ -13,6 +13,7 @@ import { whisperManager } from "./whisper/manager.js";
 import { isInstalled, modelPath } from "./whisper/models.js";
 import { buildDesktopConfig } from "./coach.js";
 import { getStoredWhisperModel } from "./settings.js";
+import { ingestCall } from "./profileManager.js";
 
 /**
  * One recording session: hidden capture window → PCM windows → whisper →
@@ -230,6 +231,10 @@ class RecordingSession {
       db.saveReview(callId, metrics, null, null);
       db.setCallStatus(callId, "reviewing");
       this.callChanged(callId);
+
+      // Flywheel: my spoken turns join the corpus whether or not the LLM
+      // review below succeeds — the words are valid evidence either way.
+      ingestCall(transcript, new Date(call?.startedAt ?? Date.now()).toISOString(), call?.title ?? "Call");
 
       if (!transcript.turns.some((t) => t.speaker === "me")) {
         db.saveReview(callId, metrics, null, "Nothing from your side was transcribed.");

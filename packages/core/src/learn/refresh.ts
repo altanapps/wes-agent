@@ -3,6 +3,7 @@ import type { CoachConfig } from "../config.js";
 import { coachPaths } from "../storage/paths.js";
 import { loadCorpus } from "./store.js";
 import { buildCoachingProfile } from "./diagnostics.js";
+import { windowCorpus } from "./flywheel.js";
 
 /**
  * Regenerate the coaching profile from the corpus already on disk
@@ -18,7 +19,7 @@ export async function runRefresh(config: CoachConfig): Promise<void> {
   }
 
   console.log(`Diagnosing across ${corpus.length} stored messages…`);
-  const profile = await buildCoachingProfile(config, corpus);
+  const profile = await buildCoachingProfile(config, windowCorpus(corpus));
 
   mkdirSync(paths.dataDir, { recursive: true });
   writeFileSync(paths.profileFile, profile + "\n", "utf8");

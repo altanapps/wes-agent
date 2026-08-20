@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import type { PublicSettings, WhisperModelState } from "../../shared/ipc.js";
 import { CaptureTest } from "./CaptureTest.js";
 import { CallsPane } from "./CallsPane.js";
+import { TrendsPane } from "./TrendsPane.js";
 import { Logo } from "./Logo.js";
 
-type View = "chat" | "calls" | "settings";
+type View = "chat" | "calls" | "trends" | "settings";
 
 const NAV: { view: View; icon: string; label: string }[] = [
   { view: "chat", icon: "✎", label: "Coach" },
   { view: "calls", icon: "◉", label: "Calls" },
+  { view: "trends", icon: "↗", label: "Trends" },
   { view: "settings", icon: "⚙", label: "Settings" },
 ];
 
@@ -50,6 +52,8 @@ export function App() {
           <ChatPane hasApiKey={settings?.hasApiKey ?? false} />
         ) : view === "calls" ? (
           <CallsPane />
+        ) : view === "trends" ? (
+          <TrendsPane />
         ) : (
           <SettingsPane settings={settings} onSaved={setSettings} />
         )}

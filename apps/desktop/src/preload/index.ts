@@ -40,9 +40,13 @@ const api: WesApi = {
   modelsState: () => ipcRenderer.invoke(IPC.modelsState),
   modelsDownload: (id: WhisperModelId) => ipcRenderer.invoke(IPC.modelsDownload, id),
 
+  trendsGet: () => ipcRenderer.invoke(IPC.trendsGet),
+  profileRefresh: () => ipcRenderer.invoke(IPC.profileRefresh),
+
   onRecordingStatus: (cb) => subscribe(IPC.evRecordingStatus, cb),
   onCallUpdated: (cb) => subscribe(IPC.evCallUpdated, cb),
   onModelProgress: (cb) => subscribe(IPC.evModelProgress, cb),
+  onProfileStatus: (cb) => subscribe(IPC.evProfileStatus, cb),
 };
 
 contextBridge.exposeInMainWorld("wes", api);

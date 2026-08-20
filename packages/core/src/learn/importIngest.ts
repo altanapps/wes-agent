@@ -4,6 +4,7 @@ import { coachPaths } from "../storage/paths.js";
 import { loadCorpusFile } from "../sources/corpusFile.js";
 import { appendMessages, loadCorpus } from "./store.js";
 import { buildCoachingProfile } from "./diagnostics.js";
+import { windowCorpus } from "./flywheel.js";
 
 /**
  * Generic import LEARN job (CLI: `npm run learn:import -- <file>`).
@@ -26,7 +27,7 @@ export async function runImportIngest(config: CoachConfig, file: string): Promis
 
   const corpus = loadCorpus(paths);
   console.log(`Diagnosing across ${corpus.length} stored messages…`);
-  const profile = await buildCoachingProfile(config, corpus);
+  const profile = await buildCoachingProfile(config, windowCorpus(corpus));
 
   mkdirSync(paths.dataDir, { recursive: true });
   writeFileSync(paths.profileFile, profile + "\n", "utf8");

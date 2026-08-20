@@ -11,6 +11,7 @@ import { recordingSession } from "./recordingSession.js";
 import * as db from "./db.js";
 import { downloadModel, modelsState } from "./whisper/models.js";
 import { whisperManager } from "./whisper/manager.js";
+import { corpusCounts, onProfileEvent, readProfile, regenerateProfile } from "./profileManager.js";
 
 const isDev = !!process.env.ELECTRON_RENDERER_URL;
 
@@ -137,10 +138,18 @@ function registerIpc(): void {
   ipcMain.handle(IPC.modelsDownload, (_e, id: WhisperModelId) =>
     downloadModel(id, (pct) => sendToUI(IPC.evModelProgress, { id, pct })),
   );
+
+  ipcMain.handle(IPC.trendsGet, () => ({
+    series: db.getTrendSeries(),
+    profile: readProfile(),
+    corpusCounts: corpusCounts(),
+  }));
+  ipcMain.handle(IPC.profileRefresh, () => regenerateProfile());
 }
 
 void app.whenReady().then(() => {
   registerLoopbackHandler();
+  onProfileEvent((status, detail) => sendToUI(IPC.evProfileStatus, { status, detail }));
   recordingSession.wire(
     (status) => {
       sendToUI(IPC.evRecordingStatus, status);

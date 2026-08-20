@@ -38,4 +38,4 @@ export type { Message, Channel, Source } from "./sources/types.js";
 export { slackSource } from "./sources/slack.js";
 export { granolaSource, myTurns } from "./sources/granola.js";
 export { loadCorpusFile } from "./sources/corpusFile.js";
-export { transcriptsSource } from "./sources/transcripts.js";
+export { callTurnsToMessages, windowCorpus } from "./learn/flywheel.js";

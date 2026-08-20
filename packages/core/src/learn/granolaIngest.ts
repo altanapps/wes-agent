@@ -4,6 +4,7 @@ import { coachPaths } from "../storage/paths.js";
 import { granolaSource } from "../sources/granola.js";
 import { appendMessages, loadCorpus, readCursor, writeCursor } from "./store.js";
 import { buildCoachingProfile } from "./diagnostics.js";
+import { windowCorpus } from "./flywheel.js";
 
 /**
  * The Granola LEARN job (CLI: `npm run learn:granola`).
@@ -39,7 +40,7 @@ export async function runGranolaIngest(config: CoachConfig): Promise<{ added: nu
 
   const corpus = loadCorpus(paths);
   console.log(`Diagnosing across ${corpus.length} stored messages…`);
-  const profile = await buildCoachingProfile(config, corpus);
+  const profile = await buildCoachingProfile(config, windowCorpus(corpus));
 
   mkdirSync(paths.dataDir, { recursive: true });
   writeFileSync(paths.profileFile, profile + "\n", "utf8");
