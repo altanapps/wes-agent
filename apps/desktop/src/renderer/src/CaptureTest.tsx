@@ -64,6 +64,9 @@ export function CaptureTest() {
       setRecording(true);
     } catch (err) {
       await stopLanes();
+      // Unlatch test mode in main — a latched flag would silently swallow
+      // the audio of every later real recording.
+      await window.wes.captureEnd().catch(() => {});
       setError((err as Error).message);
     }
   }

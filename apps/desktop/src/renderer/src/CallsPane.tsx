@@ -22,6 +22,8 @@ export function CallsPane() {
 
   useEffect(() => {
     refreshList();
+    // Pull current state on mount — this window may have opened mid-recording.
+    void window.wes.recordingStatus().then(setRecording);
     const offStatus = window.wes.onRecordingStatus(setRecording);
     const offCall = window.wes.onCallUpdated((id) => {
       refreshList();

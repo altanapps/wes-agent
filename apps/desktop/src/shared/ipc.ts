@@ -118,6 +118,7 @@ export const IPC = {
   granolaImport: "granola:import",
   recordingStart: "recording:start",
   recordingStop: "recording:stop",
+  recordingStatus: "recording:status",
   callsList: "calls:list",
   callGet: "calls:get",
   callDelete: "calls:delete",
@@ -149,6 +150,8 @@ export interface WesApi {
 
   recordingStart(title?: string): Promise<RecordingStatus>;
   recordingStop(): Promise<RecordingStatus>;
+  /** Pull the current status — a window opened mid-recording must not assume idle. */
+  recordingStatus(): Promise<RecordingStatus>;
   /** Nudge pill only: hide the pill (never stops a recording). */
   nudgeDismiss(): Promise<void>;
   callsList(): Promise<CallSummary[]>;

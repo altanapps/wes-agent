@@ -114,12 +114,21 @@ function registerIpc(): void {
     return result;
   });
 
-  // Capture chunks arrive from the self-check (test) OR the hidden session window.
-  ipcMain.handle(IPC.captureBegin, () => beginCaptureTest());
-  ipcMain.on(IPC.captureChunk, (_e, lane: CaptureLane, pcm: ArrayBuffer, startMs: number) => {
+  // Capture chunks arrive from the self-check (test) OR the hidden session
+  // window — routed by SENDER, so the two paths can never cross.
+  ipcMain.handle(IPC.captureBegin, () => {
+    if (recordingSession.isActive()) {
+      throw new Error("A recording is in progress — stop it before running the capture test.");
+    }
+    beginCaptureTest();
+  });
+  ipcMain.on(IPC.captureChunk, (e, lane: CaptureLane, pcm: ArrayBuffer, startMs: number) => {
     if ((lane !== "mic" && lane !== "system") || !(pcm instanceof ArrayBuffer)) return;
-    if (isCaptureTestActive()) addCaptureChunk(lane, pcm);
-    else recordingSession.onChunk(lane, pcm, Number(startMs) || 0);
+    if (recordingSession.ownsSender(e.sender.id)) {
+      recordingSession.onChunk(lane, pcm, Number(startMs) || 0);
+    } else if (isCaptureTestActive()) {
+      addCaptureChunk(lane, pcm);
+    }
   });
   ipcMain.handle(IPC.captureEnd, () => endCaptureTest());
   ipcMain.on(IPC.captureMode, (_e, mode: CaptureMode | "fatal", message?: string) => {
@@ -142,6 +151,7 @@ function registerIpc(): void {
   });
   ipcMain.handle(IPC.nudgeDismiss, () => closeNudgePill());
   ipcMain.handle(IPC.recordingStop, () => recordingSession.stop());
+  ipcMain.handle(IPC.recordingStatus, () => recordingSession.status());
   ipcMain.handle(IPC.callsList, () => db.listCalls());
   ipcMain.handle(IPC.callGet, (_e, id: string) => db.getCall(String(id)));
   ipcMain.handle(IPC.callDelete, (_e, id: string) => db.deleteCall(String(id)));

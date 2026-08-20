@@ -33,6 +33,7 @@ const api: WesApi = {
 
   recordingStart: (title?: string) => ipcRenderer.invoke(IPC.recordingStart, title),
   recordingStop: () => ipcRenderer.invoke(IPC.recordingStop),
+  recordingStatus: () => ipcRenderer.invoke(IPC.recordingStatus),
   nudgeDismiss: () => ipcRenderer.invoke(IPC.nudgeDismiss),
   callsList: () => ipcRenderer.invoke(IPC.callsList),
   callGet: (id: string) => ipcRenderer.invoke(IPC.callGet, id),

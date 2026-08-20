@@ -59,6 +59,13 @@ class RecordingSession {
     this.callChanged = callChanged;
   }
 
+  /** Does this webContents belong to our hidden capture window? Chunk routing
+   *  keys off the SENDER, never a global mode flag — the capture self-check
+   *  and a live session can then never steal each other's audio. */
+  ownsSender(webContentsId: number): boolean {
+    return this.captureWindow !== null && this.captureWindow.webContents.id === webContentsId;
+  }
+
   status(): RecordingStatus {
     return {
       state: this.state,

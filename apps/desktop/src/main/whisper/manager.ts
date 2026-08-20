@@ -40,10 +40,15 @@ export class WhisperManager {
 
   private spawn(): void {
     const entry = join(import.meta.dirname, "whisperWorker.js");
-    this.worker = utilityProcess.fork(entry, [], { serviceName: "wes-whisper" });
+    const worker = utilityProcess.fork(entry, [], { serviceName: "wes-whisper" });
+    this.worker = worker;
     this.ready = false;
 
-    this.worker.on("message", (msg: WorkerReply) => {
+    // Guard every handler on the worker instance it was registered for: after
+    // a model switch (shutdown + respawn), the old worker's async exit/message
+    // events must not clobber the replacement's state.
+    worker.on("message", (msg: WorkerReply) => {
+      if (this.worker !== worker) return;
       if (msg.type === "ready") {
         this.ready = true;
         this.respawns = 0;
@@ -62,7 +67,8 @@ export class WhisperManager {
       this.pump();
     });
 
-    this.worker.on("exit", () => {
+    worker.on("exit", () => {
+      if (this.worker !== worker) return;
       this.worker = null;
       this.ready = false;
       const dropped = this.inFlight;
@@ -80,7 +86,7 @@ export class WhisperManager {
       }
     });
 
-    this.worker.postMessage({ type: "init", modelPath: this.modelPath });
+    worker.postMessage({ type: "init", modelPath: this.modelPath });
   }
 
   transcribe(
@@ -89,6 +95,12 @@ export class WhisperManager {
   ): Promise<{ startMs: number; endMs: number; text: string }[]> {
     return new Promise((resolve, reject) => {
       this.queue.push({ id: this.nextId++, offsetMs, pcm, attempts: 0, resolve, reject });
+      // A worker that crashed while IDLE has no exit-time respawn (nothing was
+      // queued) — a new job is the other spawn path, or drain() hangs forever.
+      if (!this.worker && this.modelPath) {
+        this.respawns = 0;
+        this.spawn();
+      }
       this.pump();
     });
   }

@@ -13,6 +13,13 @@ import { loadPcmWorklet } from "./pcmWorklet.js";
  */
 const SAMPLE_RATE = 16000;
 
+// One epoch for BOTH lanes. Each lane's sample counter gives intra-lane
+// precision, but the system lane opens 0.5–2s after the mic (getDisplayMedia
+// latency) — without a shared anchor, "them" timestamps skew earlier than
+// "me" by that delay, right inside the interruption/backchannel windows the
+// metrics depend on.
+const sessionEpoch = performance.now();
+
 async function openLane(lane: CaptureLane): Promise<void> {
   const stream =
     lane === "mic"
@@ -40,9 +47,19 @@ async function openLane(lane: CaptureLane): Promise<void> {
   const node = new AudioWorkletNode(ctx, "pcm-chunker");
 
   let samplesSent = 0;
+  let laneAnchorMs: number | null = null;
   node.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
-    const startMs = Math.round((samplesSent / SAMPLE_RATE) * 1000);
-    samplesSent += e.data.byteLength / 2;
+    const chunkSamples = e.data.byteLength / 2;
+    if (laneAnchorMs === null) {
+      // First chunk: its audio STARTED chunk-duration ago; anchor the lane's
+      // sample clock to the shared session epoch at that moment.
+      laneAnchorMs = Math.max(
+        0,
+        performance.now() - sessionEpoch - (chunkSamples / SAMPLE_RATE) * 1000,
+      );
+    }
+    const startMs = Math.round(laneAnchorMs + (samplesSent / SAMPLE_RATE) * 1000);
+    samplesSent += chunkSamples;
     window.wes.captureChunk(lane, e.data, startMs);
   };
   source.connect(node);
