@@ -1,0 +1,27 @@
+appId: tech.nuff.wes
+productName: Wes
+directories:
+  buildResources: build
+  output: release
+files:
+  - out/**
+  - package.json
+mac:
+  category: public.app-category.productivity
+  icon: build/icon.icns
+  # Ad-hoc signed for local use; swap for a Developer ID identity before distribution.
+  # NOTE: TCC permissions key off bundle id + signature — with ad-hoc signing,
+  # permission grants may need re-granting after a rebuild. Real signing fixes this.
+  hardenedRuntime: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    NSMicrophoneUsageDescription: >-
+      Wes records your side of calls to coach how you speak. Audio is
+      transcribed on this Mac and deleted; only transcripts are analyzed.
+    NSAudioCaptureUsageDescription: >-
+      Wes captures system audio during calls so it can tell your voice apart
+      from others. Audio never leaves this Mac and is deleted after transcription.
+dmg:
+  sign: false
+electronVersion: 43.4.1

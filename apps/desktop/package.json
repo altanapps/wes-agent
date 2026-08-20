@@ -1,0 +1,28 @@
+{
+  "name": "@wes/desktop",
+  "version": "0.1.0",
+  "description": "Wes Desktop — Granola-style communication coaching for your calls (macOS).",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "package": "electron-vite build && electron-builder --mac dir"
+  },
+  "dependencies": {
+    "@wes/core": "*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0"
+  },
+  "productName": "Wes"
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Standalone mark (no tile) for in-app and web use; inherits currentColor. -->
+  <g stroke="currentColor" stroke-width="44" stroke-linecap="round" fill="none">
+    <line x1="96" y1="216" x2="96" y2="296"/>
+    <line x1="176" y1="166" x2="176" y2="346"/>
+    <line x1="256" y1="196" x2="256" y2="316"/>
+  </g>
+  <path d="M310 308 L348 350 L416 176" stroke="currentColor" stroke-width="44"
+        stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
