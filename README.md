@@ -1,6 +1,6 @@
 # Wes — a communication coach you can talk to
 
-Talk to **Wes**, an executive-communication coach modeled on [Wes Kao](https://newsletter.weskao.com/) (Maven, altMBA), over Telegram or your terminal. Paste a draft — investor update, cold email, hard feedback, Slack message — and Wes diagnoses it against her frameworks and rewrites it **in your voice**. Or ask her to coach you through a conversation you're prepping for.
+Talk to **Wes**, an executive-communication coach modeled on [Wes Kao](https://newsletter.weskao.com/) (Maven, altMBA) — in a **macOS desktop app**, over Telegram, or in your terminal. Paste a draft — investor update, cold email, hard feedback, Slack message — and Wes diagnoses it against her frameworks and rewrites it **in your voice**. Or ask her to coach you through a conversation you're prepping for.
 
 It's also a **template for turning any podcast persona into a character-agent**: the character is pure markdown, the runtime is thin, the gateways are pluggable.
 
@@ -43,11 +43,17 @@ npm run dev:telegram
 A coach's real value isn't mimicking how you write — it's spotting what you *keep getting wrong* and tracking whether you improve. Feed `learn` a corpus of your sent messages (from any channel) and it diagnoses your recurring patterns against Wes's frameworks. The result is auto-loaded so Wes targets your actual habits ("you buried the ask again — your #1 miss").
 
 ```bash
-npm run learn -- examples/sample-corpus.json   # → writes .coach/profile.md
-npm run dev:cli                                 # Wes now coaches your patterns
+npm run learn -- examples/sample-corpus.json   # one-shot: diagnose a file → .coach/profile.md
+npm run learn:slack                            # pull your sent Slack messages (SLACK_USER_TOKEN)
+npm run learn:granola                          # pull your spoken turns from Granola meetings (GRANOLA_API_KEY)
+npm run learn:import -- <file>                 # append any exported corpus (e.g. an email dump)
+npm run learn:refresh                          # re-diagnose everything already stored
+npm run dev:cli                                # Wes now coaches your patterns
 ```
 
-The corpus is a JSON array of `{text, channel, date, audience}` (or blank-line-separated text). Channel feeders — Slack → Email → Calls — produce it ([`docs/capture-channels.md`](docs/capture-channels.md)); the diagnosis is channel-agnostic. One draft can't show a pattern; a hundred can.
+The corpus is a JSON array of `{text, channel, date, audience}` (or blank-line-separated text), accumulated in `.coach/corpus.jsonl` with per-source cursors so scheduled runs stay incremental. The diagnosis is channel-agnostic ([`docs/capture-channels.md`](docs/capture-channels.md)) — one draft can't show a pattern; a hundred can.
+
+**The Granola feeder** deserves a note: if [Granola](https://granola.ai) already records your meetings, `learn:granola` imports only *your* spoken turns (Granola's transcripts are diarized by source — microphone = you), so Wes coaches your verbal habits with zero extra recording. Needs a Granola Business-plan API key (Granola → Settings → Connectors → API keys).
 
 ### Make rewrites sound like *you* (optional)
 
@@ -58,20 +64,57 @@ Separately, point `WES_PROFILE_PATH` at a gitignored markdown file describing yo
 WES_PROFILE_PATH=./personal/profile.md   # gitignored — your private context
 ```
 
+## The desktop app
+
+The Granola-shaped surface from the vision: a macOS menubar app that records your calls
+(mic = you, system audio = them — no meeting bot), transcribes locally with whisper.cpp,
+and coaches your *spoken* communication after each call — filler words, pace, talk ratio,
+buried asks, signposting — feeding the same coaching profile.
+
+**Working today:**
+
+- Menubar app (Electron 43, sidebar shell: **Coach / Calls / Settings**) with the full Wes
+  chat wired to `@wes/core`; data lives in `~/Library/Application Support/Wes/`.
+- Settings with **keychain-encrypted keys** (Anthropic + Granola via Electron `safeStorage`)
+  and one-click **"Import calls from Granola"**.
+- **Two-lane capture self-check** (Calls tab): records mic + system-loopback audio
+  (CoreAudio tap, macOS 14.2+) to per-lane WAVs so you can verify diarization-by-source
+  on your machine — the go/no-go gate for native call recording.
+- **A packaged, branded `Wes.app`** (`npm run package -w @wes/desktop` →
+  `apps/desktop/release/mac-arm64/`): bundle id `tech.nuff.wes`, the [brand icon](brand/),
+  mic/system-audio usage strings — so macOS permission panes show *Wes*, not Electron.
+
+**In progress** (see the plan in `docs/` and `ROADMAP.md`): whisper.cpp transcription in a
+utility process, call sessions with transcripts + deterministic speech metrics, and Wes's
+per-call review. Audio stays on-device and is deleted after transcription; only transcripts
+go to the Anthropic API.
+
+```bash
+npm run dev:desktop                # run in dev (HMR)
+npm run package -w @wes/desktop    # build the branded Wes.app
+```
+
+## Brand & site
+
+The identity — a waveform resolving into a rising tick (your voice, coached upward), moss
+green on paper — lives in [`brand/`](brand/) (SVG mark, macOS `.icns`, renders). The landing
+page carrying the same identity is [`site/index.html`](site/index.html), self-contained and
+ready for any static host.
+
 ## How it's built
 
-Three decoupled layers (full detail in [`docs/architecture.md`](docs/architecture.md)):
+An npm-workspaces monorepo, three decoupled layers (full detail in [`docs/architecture.md`](docs/architecture.md)):
 
-- **Character** — [`characters/wes/`](characters/wes/), pure markdown (persona + frameworks + rewrite protocol). Swap the directory to swap the character.
-- **Runtime** — [`src/wes.ts`](src/wes.ts), a thin wrapper over the Anthropic Messages API (`claude-opus-4-8`, adaptive thinking) with per-conversation memory.
-- **Gateways** — [`src/gateways/`](src/gateways/), pluggable front doors (CLI + Telegram today; email, Slack, browser extension on the roadmap in [`docs/gateways.md`](docs/gateways.md)).
+- **Character** — [`packages/core/characters/wes/`](packages/core/characters/wes/), pure markdown (persona + frameworks + rewrite protocol). Swap the directory to swap the character.
+- **Runtime** — [`packages/core/`](packages/core/) (`@wes/core`), host-agnostic: the coach (a thin wrapper over the Anthropic Messages API, `claude-opus-4-8`, adaptive thinking, per-conversation memory), the LEARN pipeline, and the channel sources. No Electron, no env reads — hosts inject a `CoachConfig`.
+- **Hosts / gateways** — [`apps/cli/`](apps/cli/) (terminal + Telegram + LEARN jobs, `.env` + `.coach/`) and [`apps/desktop/`](apps/desktop/) (Electron menubar app, userData + keychain).
 
 > **Built on the Messages API, by design.** Wes-as-coach is conversational, so the documented `@anthropic-ai/sdk` Messages API is the right substrate. The character layer is kept SDK-agnostic so the [agentic-loop phase](docs/agentic-loop.md) (tools, autonomy, watching your inbox) can adopt the Claude Agent SDK / Managed Agents without rewriting the persona.
 
 ## Make your own character
 
 ```bash
-cp -r characters/wes characters/<name>
+cp -r packages/core/characters/wes packages/core/characters/<name>
 # rewrite character.md (persona) + frameworks.md (their knowledge)
 CHARACTER=<name> npm run dev:cli
 ```
@@ -82,8 +125,11 @@ Full roadmap in [`ROADMAP.md`](ROADMAP.md). North star: an **all-living communic
 
 - [x] Character format + CLI + Telegram (reactive coach)
 - [x] Coaching-profile engine — diagnose recurring weaknesses from a corpus of your messages (`npm run learn`)
-- [ ] **Next:** channel feeders — Slack → Email → Calls ([`docs/capture-channels.md`](docs/capture-channels.md)) to make the diagnosis continuous
-- [ ] More gateways ([`docs/gateways.md`](docs/gateways.md)) · agentic loop ([`docs/agentic-loop.md`](docs/agentic-loop.md))
+- [x] Channel feeders: Slack (`learn:slack`), calls via Granola (`learn:granola`), any export (`learn:import`)
+- [x] Desktop app shell — monorepo, branded `Wes.app`, keychain settings, capture self-check, brand + landing page
+- [ ] **Next:** native call pipeline — whisper.cpp transcription, speech metrics, per-call Wes review
+- [ ] Gmail feeder with its own OAuth (today: one-time export via `learn:import`)
+- [ ] Camera/on-camera presence (local signals only) · before-send writing coach · agentic loop ([`docs/agentic-loop.md`](docs/agentic-loop.md))
 
 ## Disclaimer
 

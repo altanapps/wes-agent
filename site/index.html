@@ -1,0 +1,321 @@
+<title>Wes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #faf9f7;
+    --paper-raised: #ffffff;
+    --ink: #1c1b19;
+    --stone: #6f6b64;
+    --stone-faint: #a3a099;
+    --line: #e8e5e0;
+    --moss: #2e6b46;
+    --moss-deep: #1f4a31;
+    --moss-soft: #e9f1ec;
+    --clay: #b4553b;
+    --serif: "Newsreader", Georgia, serif;
+    --sans: "Public Sans", -apple-system, "Segoe UI", sans-serif;
+    --mono: "Spline Sans Mono", ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1b1a18;
+      --paper-raised: #232220;
+      --ink: #eceae6;
+      --stone: #a5a29c;
+      --stone-faint: #706d67;
+      --line: #33322f;
+      --moss: #6fae8a;
+      --moss-deep: #86bf9e;
+      --moss-soft: #27332c;
+      --clay: #d08268;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1b1a18;
+    --paper-raised: #232220;
+    --ink: #eceae6;
+    --stone: #a5a29c;
+    --stone-faint: #706d67;
+    --line: #33322f;
+    --moss: #6fae8a;
+    --moss-deep: #86bf9e;
+    --moss-soft: #27332c;
+    --clay: #d08268;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---- header ---- */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    max-width: 680px; margin: 0 auto; padding: 28px 24px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand svg { color: var(--moss); }
+  .brand .name { font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  header .cta {
+    font-size: 13.5px; font-weight: 600; color: var(--moss);
+    text-decoration: none; border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 16px; transition: border-color 150ms ease;
+  }
+  header .cta:hover { border-color: var(--moss); }
+  header .cta:focus-visible, a:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+
+  /* ---- hero ---- */
+  .hero { padding: 72px 0 40px; }
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(34px, 6vw, 52px);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  .hero .said { position: relative; white-space: nowrap; }
+  .hero .said .strike {
+    position: absolute; left: -1%; top: 54%; height: 3px; width: 102%;
+    background: var(--clay); border-radius: 2px;
+    transform: scaleX(0); transform-origin: left center;
+    animation: strike 500ms cubic-bezier(0.77, 0, 0.175, 1) 600ms forwards;
+  }
+  .hero .instead {
+    font-style: italic; color: var(--moss);
+    opacity: 0; animation: appear 500ms ease 1250ms forwards;
+  }
+  @keyframes strike { to { transform: scaleX(1); } }
+  @keyframes appear { to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .hero .said .strike { animation: none; transform: scaleX(1); }
+    .hero .instead { animation: none; opacity: 1; }
+  }
+  .hero .sub {
+    margin-top: 22px; font-size: 17.5px; color: var(--stone); max-width: 54ch; text-wrap: pretty;
+  }
+  .hero .sub strong { color: var(--ink); font-weight: 600; }
+  .hero .actions { margin-top: 30px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .btn-primary {
+    display: inline-block; background: var(--moss); color: var(--paper);
+    font-weight: 600; font-size: 15px; text-decoration: none;
+    padding: 11px 22px; border-radius: 10px;
+    transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background 150ms ease;
+  }
+  .btn-primary:hover { background: var(--moss-deep); }
+  .btn-primary:active { transform: scale(0.97); }
+  .hero .note { font-size: 13px; color: var(--stone-faint); }
+
+  /* ---- review card ---- */
+  .review { padding: 26px 0 10px; }
+  .card {
+    background: var(--paper-raised); border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: 0 1px 2px rgba(28,27,25,.04), 0 8px 28px rgba(28,27,25,.05);
+  }
+  .card .card-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px;
+  }
+  .card .title { font-weight: 600; font-size: 15px; }
+  .card .when { font-family: var(--mono); font-size: 12px; color: var(--stone-faint); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .chip {
+    font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums;
+    color: var(--stone); background: var(--paper); border: 1px solid var(--line);
+    border-radius: 999px; padding: 4px 11px;
+  }
+  .chip b { color: var(--ink); font-weight: 500; }
+  .chip.flag { color: var(--clay); border-color: var(--clay); }
+  .moment { display: grid; gap: 10px; }
+  .moment .ts { font-family: var(--mono); font-size: 12px; color: var(--stone-faint); }
+  .moment blockquote {
+    font-family: var(--serif); font-size: 17px; font-style: italic; color: var(--stone);
+    border-left: 3px solid var(--clay); padding-left: 14px;
+  }
+  .moment .coach { font-size: 14.5px; }
+  .moment .coach b { color: var(--moss); }
+
+  /* ---- sections ---- */
+  section { padding: 44px 0; }
+  section + section { border-top: 1px solid var(--line); }
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--moss); margin-bottom: 14px;
+  }
+  h2 {
+    font-family: var(--serif); font-size: 27px; font-weight: 500; letter-spacing: -0.01em;
+    margin-bottom: 12px; text-wrap: balance;
+  }
+  section p { color: var(--stone); max-width: 60ch; }
+  section p b, section li b { color: var(--ink); font-weight: 600; }
+
+  .steps { display: grid; gap: 0; margin-top: 20px; }
+  .step {
+    display: grid; grid-template-columns: 44px 1fr; gap: 14px;
+    padding: 16px 0; border-top: 1px solid var(--line);
+  }
+  .step .glyph {
+    width: 34px; height: 34px; border-radius: 9px; background: var(--moss-soft);
+    color: var(--moss); display: grid; place-items: center; font-size: 15px;
+  }
+  .step h3 { font-size: 15.5px; font-weight: 600; margin-bottom: 2px; }
+  .step p { font-size: 14.5px; }
+
+  ul.plain { list-style: none; padding: 0; margin-top: 16px; display: grid; gap: 10px; }
+  ul.plain li { color: var(--stone); padding-left: 22px; position: relative; max-width: 60ch; }
+  ul.plain li::before {
+    content: ""; position: absolute; left: 2px; top: 9px;
+    width: 8px; height: 8px; border-radius: 2px; background: var(--moss);
+  }
+
+  .sources { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .source {
+    font-size: 13.5px; font-weight: 600; color: var(--stone);
+    border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px;
+    background: var(--paper-raised);
+  }
+  .source small { display: block; font-weight: 400; font-size: 12px; color: var(--stone-faint); }
+
+  footer {
+    border-top: 1px solid var(--line); padding: 30px 0 48px;
+    font-size: 13px; color: var(--stone-faint);
+  }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+</style>
+
+<header>
+  <div class="brand">
+    <svg width="20" height="20" viewBox="0 0 512 512" aria-hidden="true">
+      <g stroke="currentColor" stroke-width="44" stroke-linecap="round" fill="none">
+        <line x1="96" y1="216" x2="96" y2="296"/>
+        <line x1="176" y1="166" x2="176" y2="346"/>
+        <line x1="256" y1="196" x2="256" y2="316"/>
+      </g>
+      <path d="M310 308 L348 350 L416 176" stroke="currentColor" stroke-width="44"
+            stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <span class="name">Wes</span>
+  </div>
+  <a class="cta" href="#early">Early access</a>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>
+      You said <span class="said">&ldquo;um, I just wanted to quickly flag&hellip;&rdquo;<span class="strike"></span></span><br>
+      <span class="instead">&ldquo;Here&rsquo;s my ask.&rdquo;</span>
+    </h1>
+    <p class="sub">
+      Wes sits in the menubar and listens to your calls — no bot in the meeting, nothing
+      leaves your Mac but text. After each call it shows you <strong>what you actually said</strong>,
+      the habits behind it, and the sentence to say instead. The more it hears, the more
+      precisely it coaches <strong>your</strong> patterns.
+    </p>
+    <div class="actions">
+      <a class="btn-primary" href="#early" id="early">Request early access</a>
+      <span class="note">macOS 14.2+ · local-first · in development</span>
+    </div>
+  </div>
+
+  <div class="review" aria-label="Example call review">
+    <div class="card">
+      <div class="card-head">
+        <span class="title">Pricing call — Meridian</span>
+        <span class="when">Tue 14:00 · 46 min</span>
+      </div>
+      <div class="chips">
+        <span class="chip"><b>148</b> wpm</span>
+        <span class="chip"><b>3.2</b> fillers / 100 words</span>
+        <span class="chip"><b>61%</b> talk time</span>
+        <span class="chip flag">ask at min 31</span>
+      </div>
+      <div class="moment">
+        <span class="ts">31:04 — the buried ask</span>
+        <blockquote>“…so, um, there’s a lot of context here, basically going back to Q1 when we first scoped the tiers…”</blockquote>
+        <p class="coach"><b>Wes:</b> Third call in a row the ask lands after minute 30 — your #1 recurring
+        miss. Open your next speaking turn with: <b>“I want to move you to the annual tier — here’s
+        why, then the context.”</b></p>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="eyebrow">How it works</div>
+    <h2>A coach, not a note-taker</h2>
+    <p>Notes apps remember the meeting. Wes changes how you sound in the next one.</p>
+    <div class="steps">
+      <div class="step">
+        <span class="glyph">●</span>
+        <div>
+          <h3>Record without a bot</h3>
+          <p>Your mic is you; system audio is them. Nothing joins the meeting, nothing appears
+          in the participant list.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="glyph">✎</span>
+        <div>
+          <h3>Transcribe on your Mac</h3>
+          <p>Whisper runs locally. Audio is deleted the moment it becomes text — it never
+          rests on disk, never leaves the machine.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="glyph">✓</span>
+        <div>
+          <h3>Get coached, measurably</h3>
+          <p>Hard metrics — pace, fillers, talk ratio, interruptions — plus the two or three
+          moments that mattered, judged against real executive-communication frameworks.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">The flywheel</div>
+    <h2>It learns your patterns, not your voice</h2>
+    <p>Every call and email feeds a private coaching profile of your <b>recurring weaknesses</b> —
+    the hedge you always open with, the ask you always bury. That’s how Wes can say
+    <i>“you did it again”</i> — and prove it when you improve. It never mimics you; its job is to
+    move you off those habits.</p>
+    <div class="sources">
+      <span class="source">Calls <small>native capture, or import from Granola</small></span>
+      <span class="source">Email <small>what you actually sent</small></span>
+      <span class="source">Slack <small>your messages, on your token</small></span>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Privacy</div>
+    <h2>Local-first, or it doesn’t ship</h2>
+    <ul class="plain">
+      <li><b>Audio never leaves your Mac</b> — transcribed locally, deleted after transcription.</li>
+      <li><b>You start every recording.</b> No always-on capture, no silent auto-record.</li>
+      <li><b>Only transcripts are analyzed</b> — sent to the model you configure, with your key.</li>
+      <li><b>One pane lists everything stored.</b> Delete any call, or everything, any time.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="eyebrow">Coming next</div>
+    <h2>Camera, presence, and the before-send coach</h2>
+    <p>On-camera presence — framing, gaze, gesture — analyzed the same local-first way: signals
+    kept, frames discarded. And a coach that catches the hedge <b>before</b> you hit send,
+    in any app.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Wes — an executive-communication coach. An homage to the frameworks of Wes Kao; not affiliated.</span>
+    <span>Built in the open.</span>
+  </div>
+</footer>
