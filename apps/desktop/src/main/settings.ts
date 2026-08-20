@@ -13,6 +13,7 @@ interface StoredSettings {
   effort: Effort;
   character: string;
   whisperModel: WhisperModelId;
+  meetingNudge: boolean;
   apiKeyEncrypted?: string;
   granolaKeyEncrypted?: string;
 }
@@ -22,6 +23,7 @@ const DEFAULTS: StoredSettings = {
   effort: "high",
   character: "wes",
   whisperModel: "small.en",
+  meetingNudge: true,
 };
 
 function settingsFile(): string {
@@ -57,6 +59,7 @@ export function getPublicSettings(): PublicSettings {
     effort: s.effort,
     character: s.character,
     whisperModel: s.whisperModel,
+    meetingNudge: s.meetingNudge,
     hasApiKey: Boolean(s.apiKeyEncrypted) || Boolean(process.env.ANTHROPIC_API_KEY),
     hasGranolaKey: Boolean(s.granolaKeyEncrypted) || Boolean(process.env.GRANOLA_API_KEY),
   };
@@ -67,6 +70,7 @@ export function applySettingsPatch(patch: SettingsPatch): PublicSettings {
   if (patch.model !== undefined) s.model = patch.model;
   if (patch.effort !== undefined) s.effort = patch.effort;
   if (patch.whisperModel !== undefined) s.whisperModel = patch.whisperModel;
+  if (patch.meetingNudge !== undefined) s.meetingNudge = patch.meetingNudge;
   if (patch.apiKey !== undefined && patch.apiKey.trim()) {
     s.apiKeyEncrypted = encryptSecret(patch.apiKey.trim());
   }
@@ -112,4 +116,8 @@ export function getStoredModelAndEffort(): { model: string; effort: Effort; char
 
 export function getStoredWhisperModel(): WhisperModelId {
   return load().whisperModel;
+}
+
+export function getMeetingNudgeEnabled(): boolean {
+  return load().meetingNudge;
 }

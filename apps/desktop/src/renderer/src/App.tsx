@@ -314,6 +314,29 @@ function SettingsPane({
             </div>
           </div>
 
+          <div className="section-label">Meeting nudge</div>
+          <div className="card">
+            <label className="toggle-row">
+              <input
+                type="checkbox"
+                checked={settings?.meetingNudge ?? true}
+                onChange={(e) => {
+                  void window.wes
+                    .setSettings({ meetingNudge: e.target.checked })
+                    .then(onSaved);
+                }}
+              />
+              <span>
+                Nudge me when a meeting with a video link is starting
+                <small>
+                  Watches your Mac's calendar (Google/anything it syncs) and detects active
+                  Zoom meetings. Always asks — never records on its own. macOS will request
+                  Calendar access on first use.
+                </small>
+              </span>
+            </label>
+          </div>
+
           <div className="section-label">Transcription</div>
           <TranscriptionSection />
 

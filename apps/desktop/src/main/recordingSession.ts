@@ -73,7 +73,7 @@ class RecordingSession {
     return this.state === "starting" || this.state === "recording";
   }
 
-  async start(): Promise<RecordingStatus> {
+  async start(title?: string): Promise<RecordingStatus> {
     if (this.state !== "idle") return this.status();
     this.lastError = null;
 
@@ -90,15 +90,17 @@ class RecordingSession {
 
       this.callId = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
       this.startedAt = Date.now();
-      const title = `Call — ${new Date().toLocaleString(undefined, {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })}`;
+      const callTitle =
+        title ??
+        `Call — ${new Date().toLocaleString(undefined, {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
       // Assume both lanes until the capture renderer reports otherwise.
       this.captureMode = "mic+system";
-      db.createCall(this.callId, title, this.captureMode);
+      db.createCall(this.callId, callTitle, this.captureMode);
       this.callChanged(this.callId);
 
       this.openCaptureWindow();

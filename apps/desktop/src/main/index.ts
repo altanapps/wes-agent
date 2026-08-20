@@ -12,6 +12,7 @@ import * as db from "./db.js";
 import { downloadModel, modelsState } from "./whisper/models.js";
 import { whisperManager } from "./whisper/manager.js";
 import { corpusCounts, onProfileEvent, readProfile, regenerateProfile } from "./profileManager.js";
+import { currentMeetingTitle, startMeetingWatcher } from "./meetingWatcher.js";
 
 const isDev = !!process.env.ELECTRON_RENDERER_URL;
 
@@ -128,7 +129,11 @@ function registerIpc(): void {
     return result;
   });
 
-  ipcMain.handle(IPC.recordingStart, () => recordingSession.start());
+  ipcMain.handle(IPC.recordingStart, async () => {
+    // Auto-title a manual start after the calendar meeting happening right now.
+    const title = await currentMeetingTitle().catch(() => null);
+    return recordingSession.start(title ?? undefined);
+  });
   ipcMain.handle(IPC.recordingStop, () => recordingSession.stop());
   ipcMain.handle(IPC.callsList, () => db.listCalls());
   ipcMain.handle(IPC.callGet, (_e, id: string) => db.getCall(String(id)));
@@ -160,6 +165,7 @@ void app.whenReady().then(() => {
   registerIpc();
   createTray();
   createMainWindow();
+  startMeetingWatcher();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();

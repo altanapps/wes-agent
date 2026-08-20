@@ -10,7 +10,8 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "package": "electron-vite build && electron-builder --mac dir"
+    "package": "npm run build:helper && electron-vite build && electron-builder --mac dir",
+    "build:helper": "swiftc -O -o build/wes-calendar-helper resources/calendar-helper/main.swift"
   },
   "dependencies": {
     "@wes/core": "*",

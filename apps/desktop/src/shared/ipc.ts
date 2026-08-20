@@ -16,6 +16,7 @@ export interface PublicSettings {
   hasApiKey: boolean;
   hasGranolaKey: boolean;
   whisperModel: WhisperModelId;
+  meetingNudge: boolean;
 }
 
 /** What the renderer may write. Keys are write-only: stored encrypted, never read back. */
@@ -25,6 +26,7 @@ export interface SettingsPatch {
   apiKey?: string;
   granolaApiKey?: string;
   whisperModel?: WhisperModelId;
+  meetingNudge?: boolean;
 }
 
 /** Which capture lane a PCM chunk belongs to — diarization by source. */

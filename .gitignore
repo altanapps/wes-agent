@@ -20,3 +20,6 @@ personal/
 # Learned coaching profile (your private diagnosis) + any pulled corpus
 .coach/
 corpus*.json
+
+# Compiled Swift helper (rebuilt by npm run build:helper)
+apps/desktop/build/wes-calendar-helper

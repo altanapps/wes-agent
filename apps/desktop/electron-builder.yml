@@ -6,6 +6,9 @@ directories:
 files:
   - out/**
   - package.json
+extraResources:
+  - from: build/wes-calendar-helper
+    to: wes-calendar-helper
 mac:
   category: public.app-category.productivity
   icon: build/icon.icns
@@ -22,6 +25,12 @@ mac:
     NSAudioCaptureUsageDescription: >-
       Wes captures system audio during calls so it can tell your voice apart
       from others. Audio never leaves this Mac and is deleted after transcription.
+    NSCalendarsFullAccessUsageDescription: >-
+      Wes checks your calendar for meetings that are about to start so it can
+      offer to record them. Event details never leave this Mac.
+    NSCalendarsUsageDescription: >-
+      Wes checks your calendar for meetings that are about to start so it can
+      offer to record them. Event details never leave this Mac.
 dmg:
   sign: false
 electronVersion: 43.4.1
