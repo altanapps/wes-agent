@@ -57,3 +57,39 @@ export function requireAnthropicKey(config: CoachConfig): void {
     );
   }
 }
+
+/** Client options for either credential kind: a standard API key (x-api-key)
+ *  or an OAuth token (sk-ant-oat…, Bearer + oauth beta header — bills the
+ *  Claude subscription, Claude Code-style, instead of API credits). */
+export function anthropicClientOptions(config: CoachConfig): {
+  apiKey?: string | null;
+  authToken?: string;
+  defaultHeaders?: Record<string, string>;
+} {
+  if (config.anthropicApiKey.startsWith("sk-ant-oat")) {
+    return {
+      // apiKey: null stops the SDK from ALSO reading ANTHROPIC_API_KEY from
+      // the env and sending it as x-api-key — the server rejects an OAuth
+      // string in that header before ever looking at the Bearer token.
+      apiKey: null,
+      authToken: config.anthropicApiKey,
+      defaultHeaders: { "anthropic-beta": "oauth-2025-04-20" },
+    };
+  }
+  return { apiKey: config.anthropicApiKey };
+}
+
+/** Adaptive thinking + effort exist on the 4.6+ families; Haiku 4.5 and older
+ *  models reject them with a 400. */
+export function supportsAdaptiveThinking(model: string): boolean {
+  return !/haiku|claude-3|(sonnet|opus)-4-5/.test(model);
+}
+
+/** Request params for thinking/effort, matched to what the model accepts. */
+export function thinkingParams(config: CoachConfig): {
+  thinking?: { type: "adaptive" };
+  output_config?: { effort: Effort };
+} {
+  if (!supportsAdaptiveThinking(config.model)) return {};
+  return { thinking: { type: "adaptive" }, output_config: { effort: config.effort } };
+}

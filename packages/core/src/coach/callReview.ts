@@ -1,7 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { type CoachConfig, requireAnthropicKey } from "../config.js";
+import {
+  type CoachConfig,
+  requireAnthropicKey,
+  anthropicClientOptions,
+  supportsAdaptiveThinking,
+} from "../config.js";
 import { readCharacterFiles } from "../character.js";
 import { existsSync, readFileSync } from "node:fs";
 import { coachPaths } from "../storage/paths.js";
@@ -58,7 +63,7 @@ export async function buildCallReview(
   metrics: CallMetrics,
 ): Promise<CoachingReport> {
   requireAnthropicKey(config);
-  const client = new Anthropic({ apiKey: config.anthropicApiKey });
+  const client = new Anthropic(anthropicClientOptions(config));
 
   const knowledge = readCharacterFiles(config, ["frameworks.md", "speech-protocol.md"]);
   const profile = loadProfile(config);
@@ -66,7 +71,7 @@ export async function buildCallReview(
   const response = await client.messages.parse({
     model: config.model,
     max_tokens: 4096,
-    thinking: { type: "adaptive" },
+    ...(supportsAdaptiveThinking(config.model) ? { thinking: { type: "adaptive" as const } } : {}),
     system: [
       {
         type: "text",
@@ -82,7 +87,7 @@ export async function buildCallReview(
       },
     ],
     output_config: {
-      effort: config.effort,
+      ...(supportsAdaptiveThinking(config.model) ? { effort: config.effort } : {}),
       format: zodOutputFormat(ReportSchema),
     },
     messages: [

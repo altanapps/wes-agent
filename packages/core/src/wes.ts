@@ -1,5 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { type CoachConfig, requireAnthropicKey } from "./config.js";
+import {
+  type CoachConfig,
+  requireAnthropicKey,
+  anthropicClientOptions,
+  thinkingParams,
+} from "./config.js";
 import { loadCharacter } from "./character.js";
 import { type ConversationStore, InMemoryConversationStore } from "./memory.js";
 
@@ -23,7 +28,7 @@ export class Wes {
     private readonly store: ConversationStore = new InMemoryConversationStore(),
   ) {
     requireAnthropicKey(config);
-    this.client = new Anthropic({ apiKey: config.anthropicApiKey });
+    this.client = new Anthropic(anthropicClientOptions(config));
     const character = loadCharacter(config);
     this.name = character.name;
     this.systemPrompt = character.systemPrompt;
@@ -42,8 +47,7 @@ export class Wes {
       model: this.config.model,
       max_tokens: 4096,
       system: this.systemPrompt,
-      thinking: { type: "adaptive" },
-      output_config: { effort: this.config.effort },
+      ...thinkingParams(this.config),
       messages,
     });
 

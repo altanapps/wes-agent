@@ -1,5 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { type CoachConfig, requireAnthropicKey } from "../config.js";
+import {
+  type CoachConfig,
+  requireAnthropicKey,
+  anthropicClientOptions,
+  thinkingParams,
+} from "../config.js";
 import type { Message } from "../sources/types.js";
 
 /**
@@ -51,13 +56,12 @@ export async function buildCoachingProfile(
   requireAnthropicKey(config);
   if (messages.length === 0) throw new Error("Empty corpus — nothing to diagnose.");
 
-  const client = new Anthropic({ apiKey: config.anthropicApiKey });
+  const client = new Anthropic(anthropicClientOptions(config));
   const response = await client.messages.create({
     model: config.model,
     max_tokens: 2200,
     system: COACH_DIAGNOST,
-    thinking: { type: "adaptive" },
-    output_config: { effort: config.effort },
+    ...thinkingParams(config),
     messages: [
       {
         role: "user",
